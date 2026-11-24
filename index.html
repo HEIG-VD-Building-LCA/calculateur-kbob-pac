@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Calculateur KBOB / KBOB Rechner — Pompes à chaleur</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23dc2626'/><rect x='13' y='6' width='6' height='20' fill='white'/><rect x='6' y='13' width='20' height='6' fill='white'/></svg>" />
+  <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Bibliothèques client-side CSP-safe (zéro eval / zéro unsafe-eval) -->
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+  <script type="module" src="js/app.js"></script>
+</head>
+<body>
+  <div class="page-wrapper">
+    <header class="kbob-header">
+      <div class="kbob-header-left">
+        <div class="kbob-logo">
+          <img src="assets/logo_kbob.svg" alt="Logo KBOB" onerror="this.style.display='none'" />
+        </div>
+        <div class="kbob-header-title">
+          <h1>Calculateur KBOB / KBOB Rechner</h1>
+          <p>Écobilan paramétré des pompes à chaleur (puissance &amp; ratio de masse) — Liste KBOB 2027</p>
+        </div>
+      </div>
+      <div class="kbob-badge">Technique du bâtiment · PAC (1–100 kW)</div>
+    </header>
+
+    <nav class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-target="tab-calc" role="tab">🧮 Calculateur KBOB / KBOB Rechner</button>
+      <button class="tab-btn" data-target="tab-guide" role="tab">📖 Méthodologie &amp; Données</button>
+    </nav>
+
+    <div id="warning-banner" class="warning-toast" role="alert"></div>
+
+    <main id="tab-calc" class="tab-panel active">
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">1. Cadre d'évaluation et base de données</h2>
+        </div>
+
+        <div class="field-group" style="margin-bottom: 14px;">
+          <span class="field-label">Cadre d'évaluation</span>
+          <div class="radio-stack">
+            <label class="choice-pill">
+              <input type="radio" name="cadre" value="sia_390_1" checked />
+              <span><strong>Calcul selon SIA 390/1 ou labels / réglementations</strong> (Minergie-ECO, SNBS, etc.) — <em>sélectionne et verrouille automatiquement le périmètre incluant les fuites en usage (B1)</em></span>
+            </label>
+            <label class="choice-pill">
+              <input type="radio" name="cadre" value="libre" />
+              <span><strong>Écobilan libre</strong> — <em>permet de choisir librement le périmètre (avec ou sans fuites en usage)</em></span>
+            </label>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="field-group" id="dataset-select-wrap">
+            <label class="field-label" for="select-dataset">Base de données d'écobilan</label>
+            <select id="select-dataset"></select>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="input-projet">Nom du projet (pour les exports)</label>
+            <input type="text" id="input-projet" value="Projet PAC" />
+          </div>
+        </div>
+        <p id="dataset-desc" class="field-hint" style="margin-top: 10px;"></p>
+      </section>
+
+      <details class="card">
+        <summary>📥 Import automatique PACesti / WPesti (bientôt disponible)</summary>
+        <div class="pacesti-grid">
+          <div class="pacesti-info">
+            <strong>Import de fiche Excel PACesti / WPesti (.xlsx) — En préparation :</strong><br />
+            Cette zone permettra prochainement de glisser-déposer directement l'export Excel de <em>PACesti / WPesti</em>
+            pour pré-remplir automatiquement la technologie, la puissance nominale, le réfrigérant et la masse de la PAC.
+          </div>
+          <div class="pacesti-dropzone">
+            📄 Glisser-déposer le fichier Excel PACesti / WPesti (.xlsx)<br />
+            <small>(Fonctionnalité bientôt active)</small>
+          </div>
+        </div>
+      </details>
+
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">2. Caractéristiques de la pompe à chaleur</h2>
+        </div>
+
+        <div class="grid-3" style="margin-bottom: 14px;">
+          <div class="field-group">
+            <label class="field-label" for="select-tech">Technologie (source froide)</label>
+            <select id="select-tech"></select>
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="input-puissance">Puissance nominale (kW) [1 – 100]</label>
+            <input type="number" id="input-puissance" value="10" step="0.5" />
+          </div>
+          <div class="field-group">
+            <label class="field-label" for="select-fluide">Fluide frigorigène</label>
+            <select id="select-fluide"></select>
+          </div>
+        </div>
+
+        <div class="grid-2" style="align-items: end;">
+          <div class="field-group">
+            <span class="field-label">Masse de la pompe à chaleur</span>
+            <div class="radio-row">
+              <label class="choice-pill">
+                <input type="radio" name="masse_statut" value="inconnue" checked />
+                <span>Inconnue (modèle masse–puissance LCA-PAC)</span>
+              </label>
+              <label class="choice-pill">
+                <input type="radio" name="masse_statut" value="connue" />
+                <span>Connue (saisie manuelle)</span>
+              </label>
+            </div>
+          </div>
+          <div class="field-group" id="masse-saisie-wrap" style="display: none;">
+            <label class="field-label" for="input-masse">Masse réelle de la PAC (kg)</label>
+            <input type="number" id="input-masse" placeholder="Ex. 200" step="1" />
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">3. Périmètre, unité de référence et indicateurs</h2>
+        </div>
+
+        <div class="grid-scope" style="margin-bottom: 14px;">
+          <div class="field-group">
+            <span class="field-label">Périmètre du cycle de vie</span>
+            <div class="radio-stack">
+              <label class="choice-pill">
+                <input type="radio" name="scope" value="sia_kbob" checked />
+                <span>Fabrication (y.c. fuites en usage B1 — 2 %/an sur 20 ans) et élimination <strong>(à utiliser pour un calcul SIA 390/1)</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input type="radio" name="scope" value="sia_separe" />
+                <span>Fabrication, fuites en usage (B1) et élimination — vue détaillée <strong>(à utiliser pour un calcul SIA 390/1)</strong></span>
+              </label>
+              <label class="choice-pill">
+                <input type="radio" name="scope" value="fab_elim" />
+                <span>Fabrication et élimination (A1–A3 / C1–C4)</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="field-group">
+            <span class="field-label">Unité de référence</span>
+            <div class="radio-stack">
+              <label class="choice-pill">
+                <input type="radio" name="unite" value="appareil" checked />
+                <span>Par appareil (unité PAC)</span>
+              </label>
+              <label class="choice-pill">
+                <input type="radio" name="unite" value="kw" />
+                <span>Par kW de puissance nominale</span>
+              </label>
+              <label class="choice-pill">
+                <input type="radio" name="unite" value="kg" />
+                <span>Par kg de PAC</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group" style="margin-bottom: 10px;">
+          <span class="field-label">Indicateurs affichés (cartes KPI &amp; graphiques)</span>
+          <div id="indicators-checkboxes" class="indicators-grid"></div>
+        </div>
+
+        <div id="ef31-toggle-wrap" style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+          <label class="choice-pill" style="background: #ffffff;">
+            <input type="checkbox" id="cb-ef31" />
+            <span>Afficher tous les indicateurs complémentaires (EF 3.1) dans le tableau &amp; la fiche HTML</span>
+          </label>
+        </div>
+      </section>
+
+      <div id="meta-banner" class="calc-meta-banner"></div>
+      <div id="kpi-cards" class="kpi-grid"></div>
+
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">Répartition des impacts par phase du cycle de vie</h2>
+        </div>
+        <div id="charts-grid" class="charts-grid"></div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">Tableau récapitulatif au format KBOB</h2>
+        </div>
+        <div id="results-table-wrap" class="table-scroll"></div>
+        <div class="actions-bar">
+          <button type="button" id="btn-export-xlsx" class="btn btn-primary">📗 Exporter Excel — Format tableau KBOB 2027 (.xlsx)</button>
+          <button type="button" id="btn-export-html" class="btn btn-secondary">📄 Exporter la fiche HTML (KBOB)</button>
+          <button type="button" id="btn-export-csv" class="btn btn-secondary">📊 Exporter les données brutes (.csv)</button>
+        </div>
+      </section>
+    </main>
+
+    <section id="tab-guide" class="tab-panel">
+      <article class="card prose">
+        <h2>Calculateur KBOB / KBOB Rechner — Écobilan des pompes à chaleur</h2>
+        <p>
+          Cet outil autonome, distinct du calculateur ouvert de recherche <em>LCA-PAC</em>, est destiné aux utilisateurs de la liste
+          <strong>KBOB / ecobau</strong> (planificateurs CVC, bureaux d'études, maîtres d'ouvrage). Il a été développé par
+          l'<strong>Institut des Énergies (IE) de la HEIG-VD</strong> et financé par l'<strong>Office fédéral de l'énergie (OFEN)</strong>
+          dans le cadre du projet <strong>LCA-PAC</strong>.
+        </p>
+
+        <h3>1. Logique de calcul : interpolation à la puissance × ratio de masse</h3>
+        <ol>
+          <li>
+            <strong>Estimation de la masse théorique m<sub>théo</sub>(P) :</strong>
+            évaluée à partir du modèle continu linéaire par morceaux à 4 segments (calibré par régression LOWESS sur 214 PAC FDES/PEP et HSLU et ancré sur les points Carbotech 7, 15 et 50 kW).
+          </li>
+          <li>
+            <strong>Calcul du ratio de masse r<sub>m</sub> :</strong>
+            <div class="formula-box">
+              Si masse inconnue : m<sub>utilisée</sub> = m<sub>théo</sub>(P)  ⇒  r<sub>m</sub> = 1.000<br />
+              Si masse connue   : r<sub>m</sub> = m<sub>saisie</sub> / m<sub>théo</sub>(P)
+            </div>
+          </li>
+          <li>
+            <strong>Interpolation des impacts à la puissance P et ajustement par r<sub>m</sub> :</strong>
+            <div class="formula-box">
+              Sur [7 ; 50 kW]          : I<sub>j</sub>(P, m) = I<sub>interp, j</sub>(P) × r<sub>m</sub><br />
+              Hors plage (&lt;7 ou &gt;50 kW) : I<sub>j</sub>(P, m) = I<sub>ref, j</sub>(P<sub>borne</sub>) × [m<sub>théo</sub>(P) / m<sub>théo</sub>(P<sub>borne</sub>)] × r<sub>m</sub>
+            </div>
+          </li>
+        </ol>
+
+        <h3>2. Correspondance des variantes de réfrigérants (<code>data/fluides_options.csv</code>)</h3>
+        <div id="guide-fluides-table" class="table-scroll" style="margin-bottom: 18px;"></div>
+
+        <h3>3. Règles d'extrapolation masse–puissance (<code>data/regles_masse.csv</code>)</h3>
+        <div id="guide-masse-table" class="table-scroll" style="margin-bottom: 18px;"></div>
+
+        <h3>4. Extensibilité : mettre à jour les facteurs ou ajouter des indicateurs</h3>
+        <ul>
+          <li><code>data/datasets/*.csv</code> : modifier les valeurs ou ajouter des lignes/colonnes directement dans Excel (séparateur <code>;</code>).</li>
+          <li><code>data/indicateurs.csv</code> : définir les libellés, unités et formats d'affichage des indicateurs.</li>
+          <li><code>data/fluides_options.csv</code> : personnaliser les variantes du menu déroulant réfrigérants.</li>
+          <li><code>data/regles_masse.csv</code> : ajuster les segments <code>m = a·P + b</code>.</li>
+        </ul>
+      </article>
+
+      <details class="card">
+        <summary>📊 Facteurs de référence chargés (base de données active)</summary>
+        <div id="guide-ref-table" class="table-scroll"></div>
+      </details>
+    </section>
+
+    <footer class="kbob-footer">
+      Développé par la <strong>Haute École d'Ingénierie et de Gestion du canton de Vaud (HEIG-VD — Institut des Énergies)</strong>
+      et financé par l'<strong>Office fédéral de l'énergie (OFEN)</strong>, dans le cadre du projet <strong>LCA-PAC</strong>.
+    </footer>
+  </div>
+</body>
+</html>

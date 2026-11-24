@@ -1,0 +1,9 @@
+﻿technologie;p_min_kw;p_max_kw;a;b;source
+Air-Eau;1.0;7.0;16.44;140.9;LCA-PAC (LOWESS ancré Carbotech, 1-7 kW)
+Air-Eau;7.0;15.0;1.88;242.9;LCA-PAC (LOWESS ancré Carbotech, 7-15 kW)
+Air-Eau;15.0;50.0;14.57;52.43;LCA-PAC (LOWESS ancré Carbotech, 15-50 kW)
+Air-Eau;50.0;100.0;12.44;159.05;LCA-PAC (LOWESS ancré Carbotech, 50-100 kW)
+Saumure-Eau;1.0;7.0;5.25;121.24;LCA-PAC (LOWESS ancré Carbotech, 1-7 kW)
+Saumure-Eau;7.0;15.0;3.0;137.0;LCA-PAC (LOWESS ancré Carbotech, 7-15 kW)
+Saumure-Eau;15.0;50.0;5.74;95.86;LCA-PAC (LOWESS ancré Carbotech, 15-50 kW)
+Saumure-Eau;50.0;100.0;7.6;2.92;LCA-PAC (LOWESS ancré Carbotech, 50-100 kW)

@@ -1,0 +1,7 @@
+.idea/
+.vscode/
+.venv/
+venv/
+__pycache__/
+tous_les_fichiers.txt
+code_base.py
