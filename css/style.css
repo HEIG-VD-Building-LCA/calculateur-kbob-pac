@@ -142,6 +142,8 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
   margin-bottom: 14px;
   padding-bottom: 8px;
   border-bottom: 1px solid var(--slate-200);
@@ -385,12 +387,6 @@ input:disabled, select:disabled {
   color: var(--slate-500);
 }
 
-/* Plotly chart wrapper */
-.chart-box {
-  width: 100%;
-  min-height: 390px;
-}
-
 /* Tables */
 .table-scroll {
   width: 100%;
@@ -506,21 +502,6 @@ table.kbob-table tbody tr:hover {
   cursor: not-allowed;
 }
 
-/* Guide content */
-.prose h2 { margin-top: 0; color: var(--navy-900); font-size: 1.3rem; }
-.prose h3 { color: var(--navy-800); font-size: 1.08rem; margin-top: 18px; }
-.prose p, .prose li { color: var(--slate-700); font-size: 0.94rem; }
-.formula-box {
-  background: var(--slate-100);
-  border-left: 3px solid var(--blue-600);
-  padding: 10px 14px;
-  border-radius: 6px;
-  font-family: ui-monospace, Consolas, monospace;
-  font-size: 0.9rem;
-  margin: 8px 0;
-  overflow-x: auto;
-}
-
 /* Footer */
 .kbob-footer {
   margin-top: 28px;
@@ -535,6 +516,7 @@ table.kbob-table tbody tr:hover {
 }
 .kbob-footer strong { color: var(--navy-900); }
 
+/* Charts */
 .charts-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -582,4 +564,386 @@ table.kbob-table tbody tr:hover {
   height: 14px;
   border-radius: 3px;
   display: inline-block;
+}
+
+/* =========================================================
+   ONGLET 2 : MÉTHODOLOGIE & DONNÉES (INTERACTIF)
+   ========================================================= */
+.meth-hero {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+  color: #f8fafc;
+  padding: 20px 24px;
+  border-radius: var(--radius);
+  border-left: 5px solid var(--red-600);
+  margin-bottom: 16px;
+  box-shadow: var(--shadow-md);
+}
+
+.meth-hero-top {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.meth-pill-badge {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.meth-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.meth-mini-tag {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  color: #e2e8f0;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 6px;
+}
+
+.meth-hero h2 {
+  margin: 0 0 6px 0;
+  font-size: 1.4rem;
+  color: #ffffff;
+}
+
+.meth-hero p {
+  margin: 0;
+  font-size: 0.93rem;
+  color: #e2e8f0;
+  line-height: 1.55;
+}
+
+/* Sélecteur interactif des 3 familles de fluides */
+.fluid-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.fluid-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 15px;
+  border-radius: 8px;
+  border: 1.5px solid var(--slate-300);
+  background: #f8fafc;
+  color: var(--slate-700);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.fluid-tab-btn:hover {
+  background: #f1f5f9;
+  border-color: var(--slate-500);
+}
+
+.fluid-tab-btn.active {
+  background: var(--navy-900);
+  color: #ffffff;
+  border-color: var(--navy-900);
+  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.16);
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.dot-red { background: #ef4444; }
+.dot-amber { background: #f59e0b; }
+.dot-green { background: #10b981; }
+
+.fluid-detail-card {
+  background: #f8fafc;
+  border: 1px solid var(--slate-200);
+  border-radius: 9px;
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+
+.fluid-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.fluid-kpi-item {
+  background: #ffffff;
+  border: 1px solid var(--slate-200);
+  border-radius: 7px;
+  padding: 9px 12px;
+}
+
+.fluid-kpi-item span {
+  display: block;
+  font-size: 0.76rem;
+  color: var(--slate-500);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.fluid-kpi-item strong {
+  display: block;
+  font-size: 1.02rem;
+  color: var(--navy-900);
+  margin-top: 2px;
+}
+
+.fluid-options-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.fluid-opt-chip {
+  background: #ffffff;
+  border: 1px solid var(--slate-300);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 0.81rem;
+  color: var(--slate-700);
+}
+
+.hfo-callout {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-left: 4px solid var(--blue-600);
+  border-radius: 8px;
+  padding: 12px 15px;
+  font-size: 0.88rem;
+  color: #1e3a8a;
+  line-height: 1.5;
+}
+
+.hfo-callout-icon {
+  font-size: 1.2rem;
+  line-height: 1.2;
+}
+
+/* Simulateur pas-à-pas */
+.meth-sim-card {
+  border-top: 4px solid var(--blue-600);
+}
+
+.sim-controls-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.sim-steps-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(225px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.sim-step-card {
+  background: #f8fafc;
+  border: 1px solid var(--slate-200);
+  border-radius: 8px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.sim-step-card.highlight {
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.sim-step-tag {
+  font-size: 0.74rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--blue-700);
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+
+.sim-step-formula {
+  font-size: 0.83rem;
+  color: var(--slate-600);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  margin-bottom: 6px;
+}
+
+.sim-step-result {
+  font-size: 1.12rem;
+  font-weight: 700;
+  color: var(--navy-900);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.sim-step-card.highlight .sim-step-result {
+  color: var(--blue-700);
+}
+
+/* Barres comparatives des 3 fluides */
+.sim-compare-box {
+  background: #f8fafc;
+  border: 1px solid var(--slate-200);
+  border-radius: 9px;
+  padding: 14px 16px;
+}
+
+.sim-compare-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.sim-compare-header h4 {
+  margin: 0;
+  font-size: 0.96rem;
+  color: var(--navy-900);
+}
+
+.compare-bars-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.compare-bar-row {
+  display: grid;
+  grid-template-columns: 210px 1fr 185px;
+  align-items: center;
+  gap: 12px;
+  font-size: 0.88rem;
+  padding: 6px 10px;
+  border-radius: 7px;
+  background: #ffffff;
+  border: 1px solid var(--slate-200);
+}
+
+@media (max-width: 720px) {
+  .compare-bar-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+
+.compare-bar-row.selected {
+  border-color: var(--blue-600);
+  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.14);
+  font-weight: 700;
+}
+
+.compare-track {
+  height: 14px;
+  background: var(--slate-200);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.compare-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s ease;
+}
+
+.fill-hfc { background: #dc2626; }
+.fill-r32 { background: #f59e0b; }
+.fill-nat { background: #059669; }
+
+.compare-val {
+  text-align: right;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: nowrap;
+}
+
+.delta-badge {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  background: #dcfce7;
+  color: #166534;
+}
+
+/* Frontières du système & FAQ */
+.lifecycle-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
+
+.lifecycle-list li {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 0.9rem;
+  color: var(--slate-700);
+}
+
+.phase-badge {
+  flex-shrink: 0;
+  padding: 3px 8px;
+  border-radius: 5px;
+  font-size: 0.74rem;
+  font-weight: 700;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+.badge-fab { background: #dbeafe; color: #1e40af; }
+.badge-b1 { background: #fef3c7; color: #92400e; }
+.badge-elim { background: #fee2e2; color: #991b1b; }
+.badge-neutral { background: var(--slate-200); color: var(--slate-700); }
+
+.meth-faq details {
+  border: 1px solid var(--slate-200);
+  border-radius: 7px;
+  padding: 10px 13px;
+  margin-bottom: 9px;
+  background: #f8fafc;
+}
+
+.meth-faq summary {
+  font-weight: 700;
+  font-size: 0.91rem;
+  color: var(--navy-900);
+  cursor: pointer;
+}
+
+.meth-faq details p {
+  margin: 8px 0 0;
+  font-size: 0.87rem;
+  color: var(--slate-700);
+  line-height: 1.5;
 }

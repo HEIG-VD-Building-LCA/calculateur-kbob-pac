@@ -1,7 +1,7 @@
 /**
- * js/app.js
- * Contrôleur principal de l'application Web statique (GitHub Pages).
- * Utilise Chart.js (100 % compatible CSP strict sans eval/unsafe-eval).
+- js/app.js
+- Contrôleur principal de l'application Web statique (GitHub Pages).
+- Utilise Chart.js (100 % compatible CSP strict sans eval/unsafe-eval).
  */
 import { loadAllData } from "./data_loader.js";
 import {
@@ -16,6 +16,7 @@ import {
   formaterValeur,
 } from "./kbob_engine.js";
 import { exportCsv, exportExcelKbob2027, exportHtml } from "./exporters.js";
+import { initMethodologyTab } from "./methodology.js";
 
 const PHASE_COLORS = {
   fabrication: "#2563eb",
@@ -144,6 +145,10 @@ function syncScopeLock() {
     state.scope = SCOPE_SIA_KBOB;
   }
 
+  document.querySelectorAll("input[name='cadre']").forEach((radio) => {
+    radio.checked = radio.value === state.cadreEvaluation;
+  });
+
   document.querySelectorAll("input[name='scope']").forEach((radio) => {
     radio.checked = radio.value === state.scope;
     radio.disabled = isSia;
@@ -233,7 +238,6 @@ function renderCharts(res) {
     )
     .join("");
 
-  // Légende commune sous la grille de graphiques
   let legendEl = document.getElementById("charts-shared-legend");
   if (!legendEl) {
     legendEl = document.createElement("div");
@@ -454,6 +458,38 @@ function recalculateAndRender() {
   renderResultsTable(res);
 }
 
+function applyExampleToCalculator(scenario) {
+  const idx2027 = state.datasets.findIndex((d) => d.filename.includes("2027"));
+  if (idx2027 >= 0 && state.datasetIdx !== idx2027) {
+    state.datasetIdx = idx2027;
+    document.getElementById("select-dataset").value = String(idx2027);
+  }
+
+  state.cadreEvaluation = scenario.cadreEvaluation;
+  state.technologie = scenario.technologie;
+  state.puissanceKw = scenario.puissanceKw;
+  state.fluideOptionId = scenario.fluideOptionId;
+  state.masseConnue = scenario.masseConnue;
+  state.masseSaisieKg = scenario.masseConnue ? String(scenario.masseSaisieKg) : "";
+  state.scope = scenario.scope;
+
+  document.getElementById("input-puissance").value = state.puissanceKw;
+  document.querySelectorAll("input[name='masse_statut']").forEach((r) => {
+    r.checked = (r.value === "connue") === state.masseConnue;
+  });
+  document.getElementById("masse-saisie-wrap").style.display = state.masseConnue ? "flex" : "none";
+  document.getElementById("input-masse").value = state.masseSaisieKg;
+
+  syncControlsFromDataset(false);
+  syncScopeLock();
+  recalculateAndRender();
+
+  // Basculer sur l'onglet Calculateur
+  const calcBtn = document.querySelector(".tab-btn[data-target='tab-calc']");
+  if (calcBtn) calcBtn.click();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
 function bindEvents() {
   document.querySelectorAll(".tab-btn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -566,6 +602,7 @@ async function init() {
     syncControlsFromDataset(true);
     syncScopeLock();
     recalculateAndRender();
+    initMethodologyTab(state, applyExampleToCalculator);
   } catch (err) {
     console.error(err);
     showWarning(`Erreur lors du chargement des données CSV : ${err.message}`);

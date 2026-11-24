@@ -35,6 +35,9 @@
 
     <div id="warning-banner" class="warning-toast" role="alert"></div>
 
+    <!-- =========================================================
+         ONGLET 1 : CALCULATEUR KBOB
+         ========================================================= -->
     <main id="tab-calc" class="tab-panel active">
       <section class="card">
         <div class="card-header">
@@ -203,55 +206,240 @@
       </section>
     </main>
 
+    <!-- =========================================================
+         ONGLET 2 : MÉTHODOLOGIE & DONNÉES (INTERACTIF)
+         ========================================================= -->
     <section id="tab-guide" class="tab-panel">
-      <article class="card prose">
-        <h2>Calculateur KBOB / KBOB Rechner — Écobilan des pompes à chaleur</h2>
+      <!-- Bannière d'introduction scientifique -->
+      <div class="meth-hero">
+        <div class="meth-hero-top">
+          <span class="meth-pill-badge">Projet OFEN LCA-PAC · HEIG-VD (Institut des Énergies)</span>
+          <div class="meth-tag-row">
+            <span class="meth-mini-tag">Base BAFU:2026v1</span>
+            <span class="meth-mini-tag">Règles KBOB/ecobau v9.0</span>
+            <span class="meth-mini-tag">IPCC 2021 (AR6) &amp; EF 3.1</span>
+            <span class="meth-mini-tag">214 PAC étalonnées</span>
+          </div>
+        </div>
+        <h2>Méthodologie &amp; Données complémentaires KBOB 2027</h2>
         <p>
-          Cet outil autonome, distinct du calculateur ouvert de recherche <em>LCA-PAC</em>, est destiné aux utilisateurs de la liste
-          <strong>KBOB / ecobau</strong> (planificateurs CVC, bureaux d'études, maîtres d'ouvrage). Il a été développé par
-          l'<strong>Institut des Énergies (IE) de la HEIG-VD</strong> et financé par l'<strong>Office fédéral de l'énergie (OFEN)</strong>
-          dans le cadre du projet <strong>LCA-PAC</strong>.
+          Les données complémentaires de pompes à chaleur (PAC) pour la liste <strong>KBOB 2027</strong> (onglet <em>Technique du bâtiment</em>)
+          permettent aux planificateurs d'évaluer le principal levier d'action identifié sur le cycle de vie de la machine :
+          <strong>le choix du réfrigérant</strong>, couplé à un modèle continu d'extrapolation entre la masse et la puissance nominale (1–100 kW).
+        </p>
+      </div>
+
+      <!-- SECTION 1 : EXPLORATEUR INTERACTIF DES 3 FAMILLES DE FLUIDES -->
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">1. Données complémentaires selon le type de réfrigérant (3 options KBOB 2027)</h2>
+          <span class="field-hint">Critère KBOB : écart &gt; ±15 % sur les GES</span>
+        </div>
+        <p style="margin-top: 0; color: var(--slate-700); font-size: 0.92rem;">
+          L'analyse de sensibilité menée par la HEIG-VD sur les modèles de référence (7, 15 et 50 kW, air-eau et saumure-eau) montre que le passage d'un HFC classique (R410A)
+          au propane (R290) réduit les émissions de GES de <strong>−53 % à −55 %</strong> en fabrication/élimination, et jusqu'à <strong>−77 %</strong> en incluant les fuites sur 20 ans.
+          Sélectionnez une famille ci-dessous pour consulter ses caractéristiques :
         </p>
 
-        <h3>1. Logique de calcul : interpolation à la puissance × ratio de masse</h3>
-        <ol>
-          <li>
-            <strong>Estimation de la masse théorique m<sub>théo</sub>(P) :</strong>
-            évaluée à partir du modèle continu linéaire par morceaux à 4 segments (calibré par régression LOWESS sur 214 PAC FDES/PEP et HSLU et ancré sur les points Carbotech 7, 15 et 50 kW).
-          </li>
-          <li>
-            <strong>Calcul du ratio de masse r<sub>m</sub> :</strong>
-            <div class="formula-box">
-              Si masse inconnue : m<sub>utilisée</sub> = m<sub>théo</sub>(P)  ⇒  r<sub>m</sub> = 1.000<br />
-              Si masse connue   : r<sub>m</sub> = m<sub>saisie</sub> / m<sub>théo</sub>(P)
-            </div>
-          </li>
-          <li>
-            <strong>Interpolation des impacts à la puissance P et ajustement par r<sub>m</sub> :</strong>
-            <div class="formula-box">
-              Sur [7 ; 50 kW]          : I<sub>j</sub>(P, m) = I<sub>interp, j</sub>(P) × r<sub>m</sub><br />
-              Hors plage (&lt;7 ou &gt;50 kW) : I<sub>j</sub>(P, m) = I<sub>ref, j</sub>(P<sub>borne</sub>) × [m<sub>théo</sub>(P) / m<sub>théo</sub>(P<sub>borne</sub>)] × r<sub>m</sub>
-            </div>
-          </li>
-        </ol>
+        <div class="fluid-tabs" role="tablist">
+          <button type="button" class="fluid-tab-btn active" data-fluid-key="hfc" role="tab">
+            <span class="status-dot dot-red"></span>
+            <span>Option 1 · HFC générique (proxy R410A)</span>
+          </button>
+          <button type="button" class="fluid-tab-btn" data-fluid-key="r32" role="tab">
+            <span class="status-dot dot-amber"></span>
+            <span>Option 2 · HFC spécifique (R32)</span>
+          </button>
+          <button type="button" class="fluid-tab-btn" data-fluid-key="nat" role="tab">
+            <span class="status-dot dot-green"></span>
+            <span>Option 3 · Réfrigérant naturel (proxy R290)</span>
+          </button>
+        </div>
 
-        <h3>2. Correspondance des variantes de réfrigérants (<code>data/fluides_options.csv</code>)</h3>
-        <div id="guide-fluides-table" class="table-scroll" style="margin-bottom: 18px;"></div>
+        <div id="meth-fluid-panel" class="fluid-detail-card"></div>
 
-        <h3>3. Règles d'extrapolation masse–puissance (<code>data/regles_masse.csv</code>)</h3>
-        <div id="guide-masse-table" class="table-scroll" style="margin-bottom: 18px;"></div>
+        <div class="hfo-callout">
+          <div class="hfo-callout-icon">⚠️</div>
+          <div>
+            <strong>Traitement des fluides HFO et mélanges HFC/HFO (ex. R1234ze, R454C, R454B) :</strong>
+            Bien que leur potentiel de réchauffement global (GWP) soit faible, les essais FTIR de la HEIG-VD et la littérature confirment leur dégradation rapide dans l'atmosphère en
+            <strong>acide trifluoroacétique (TFA)</strong>, un polluant persistant de la famille des <strong>PFAS</strong>.
+            Les méthodes ACV actuelles (y compris <em>UBP'21</em>) ne captant pas cette toxicité chronique, la HEIG-VD recommande d'assimiler par défaut les PAC HFO aux
+            <strong>PAC avec réfrigérant HFC générique</strong> (les <em>ecoCFC</em> d'ecobau classent les fluides naturels en 1<sup>re</sup> priorité, les HFO en 2<sup>e</sup> et les HFC en dernière priorité).
+          </div>
+        </div>
+      </section>
 
-        <h3>4. Extensibilité : mettre à jour les facteurs ou ajouter des indicateurs</h3>
-        <ul>
-          <li><code>data/datasets/*.csv</code> : modifier les valeurs ou ajouter des lignes/colonnes directement dans Excel (séparateur <code>;</code>).</li>
-          <li><code>data/indicateurs.csv</code> : définir les libellés, unités et formats d'affichage des indicateurs.</li>
-          <li><code>data/fluides_options.csv</code> : personnaliser les variantes du menu déroulant réfrigérants.</li>
-          <li><code>data/regles_masse.csv</code> : ajuster les segments <code>m = a·P + b</code>.</li>
-        </ul>
-      </article>
+      <!-- SECTION 2 : SIMULATEUR INTERACTIF — CAS D'EXEMPLE PAS-À-PAS -->
+      <section class="card meth-sim-card">
+        <div class="card-header">
+          <h2 class="card-title">2. Simulateur pédagogique : Cas d'exemple pas-à-pas</h2>
+          <button type="button" id="btn-apply-example" class="btn btn-primary" style="padding: 7px 13px; font-size: 0.84rem;">
+            Charger ce scénario dans le calculateur ↗
+          </button>
+        </div>
+        <p style="margin-top: 0; color: var(--slate-700); font-size: 0.91rem;">
+          Testez un scénario type ou modifiez librement les paramètres pour visualiser comment le calculateur estime la masse théorique $m_{\text{théo}}(P)$,
+          applique le ratio de masse $r_m$ et interpole entre les paliers de référence <strong>7, 15 et 50 kW</strong> (base BAFU:2026v1).
+        </p>
+
+        <div class="sim-controls-grid">
+          <div class="field-group">
+            <label class="field-label" for="meth-preset">Cas d'exemple préconfiguré</label>
+            <select id="meth-preset">
+              <option value="ex_rapport">Ex. Rapport KBOB : Air-Eau 10 kW, Naturel (R290), 230 kg</option>
+              <option value="ex_villa">Ex. Villa rénovation : Air-Eau 12 kW, HFC (R410A), masse estimée</option>
+              <option value="ex_collectif">Ex. Immeuble collectif : Saumure-Eau 40 kW, HFC R32, 340 kg</option>
+              <option value="ex_ref50">Ex. Chaufferie 50 kW : Air-Eau 50 kW, Naturel (R290), 781 kg</option>
+              <option value="custom">Configuration personnalisée…</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="meth-tech">Technologie (source froide)</label>
+            <select id="meth-tech">
+              <option value="Air-Eau">Air-Eau</option>
+              <option value="Saumure-Eau">Saumure-Eau</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="meth-power">Puissance nominale [kW]</label>
+            <input type="number" id="meth-power" min="1" max="100" step="0.5" value="10" />
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="meth-mass-mode">Connaissance de la masse</label>
+            <select id="meth-mass-mode">
+              <option value="connue">Masse connue (saisie)</option>
+              <option value="inconnue">Masse inconnue (estimée)</option>
+            </select>
+          </div>
+
+          <div class="field-group" id="meth-mass-input-wrap">
+            <label class="field-label" for="meth-mass-val">Masse saisie [kg]</label>
+            <input type="number" id="meth-mass-val" min="10" max="3000" step="1" value="230" />
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="meth-fluid">Famille de fluide analysée</label>
+            <select id="meth-fluid">
+              <option value="r290">Naturel (R290 / propane)</option>
+              <option value="r32">HFC spécifique (R32)</option>
+              <option value="inconnu">HFC générique (R410A)</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="meth-scope">Périmètre du cycle de vie</label>
+            <select id="meth-scope">
+              <option value="sia_kbob">SIA 390/1 (Fab. + Fuites 20 ans + Élim.)</option>
+              <option value="fab_elim">Fabrication + Élimination (A1–C4)</option>
+            </select>
+          </div>
+
+          <div class="field-group">
+            <label class="field-label" for="meth-indicator">Indicateur comparé</label>
+            <select id="meth-indicator">
+              <option value="ges">Émissions de GES fossiles [kg CO₂-eq]</option>
+              <option value="ubp">Écopoints [UBP'21]</option>
+              <option value="nre">Énergie primaire NRE [kWh oil-eq]</option>
+              <option value="re">Énergie primaire RE [kWh oil-eq]</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Décomposition mathématique en 4 étapes -->
+        <div id="meth-steps-container" class="sim-steps-grid"></div>
+
+        <!-- Graphique comparatif des 3 fluides -->
+        <div class="sim-compare-box">
+          <div class="sim-compare-header">
+            <h4>Comparaison directe des 3 variantes de réfrigérants pour cette machine</h4>
+            <span id="meth-compare-subtitle" class="field-hint"></span>
+          </div>
+          <div id="meth-compare-bars" class="compare-bars-list"></div>
+        </div>
+      </section>
+
+      <!-- SECTION 3 : FRONTIÈRES DU SYSTÈME & CORRECTIONS KBOB 2027 -->
+      <div class="grid-2">
+        <section class="card">
+          <div class="card-header">
+            <h2 class="card-title">3. Frontières du système &amp; Fuites (SIA 390/1)</h2>
+          </div>
+          <ul class="lifecycle-list">
+            <li>
+              <span class="phase-badge badge-fab">A1–A3</span>
+              <div>
+                <strong>Fabrication :</strong> Extraction des métaux (acier, cuivre, aluminium), composants électroniques, énergie d'assemblage en usine et fuites initiales lors du scellement (<strong>3 %</strong> de la charge).
+              </div>
+            </li>
+            <li>
+              <span class="phase-badge badge-b1">B1 · SIA 390/1</span>
+              <div>
+                <strong>Fuites en fonctionnement (20 ans) :</strong> Hypothèse standard KBOB de <strong>2 %/an</strong> pendant 20 ans (soit <strong>40 %</strong> de la charge initiale perdue et rechargée annuellement). Dans le format KBOB 2027, ces impacts sont ajoutés au poste <em>Fabrication</em> afin d'éviter leur omission dans les bilans bâtiment SIA 390/1.
+              </div>
+            </li>
+            <li>
+              <span class="phase-badge badge-elim">C1–C4</span>
+              <div>
+                <strong>Élimination :</strong> Démantèlement, traitement DEEE et fuites résiduelles lors du démantèlement (<strong>19 %</strong> de la charge initiale).
+              </div>
+            </li>
+            <li>
+              <span class="phase-badge badge-neutral">Hors périmètre</span>
+              <div>
+                <strong>Consommation électrique (B6) &amp; Module D :</strong> L'électricité consommée en fonctionnement est traitée séparément dans l'onglet <em>« Énergie »</em> (par kWh de chaleur utile) de la liste KBOB.
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <section class="card">
+          <div class="card-header">
+            <h2 class="card-title">4. Nouveautés &amp; Corrections (KBOB 2022 → 2027)</h2>
+          </div>
+          <div class="meth-faq">
+            <details open>
+              <summary>Correction du double comptage des fuites (−21 % GES)</summary>
+              <p>
+                Un audit de la HEIG-VD (validé par Carbotech et R. Frischknecht) a corrigé une erreur de double comptage présente dans la base UVEK 2021 :
+                les fuites sont ramenées de <strong>22 % à 3 %</strong> en fabrication et ajustées de <strong>11 % à 19 %</strong> en élimination (total <strong>22 %</strong> au lieu de 33 %).
+              </p>
+            </details>
+            <details>
+              <summary>Migration UVEK 2021 → BAFU:2026v1 &amp; IPCC 2021 (AR6)</summary>
+              <p>
+                La mise à jour vers <strong>BAFU:2026v1</strong> réduit les émissions de fabrication de −9 à −20 % et l'énergie primaire NRE de −19 à −26 % (mix ENTSO-E plus renouvelable).
+                En parallèle, le passage au GIEC 2021 (AR6) relève le GWP<sub>100</sub> du R410A de 1'924 à <strong>2'256 kg CO₂-eq/kg (+17 %)</strong> :
+                les deux effets se compensent presque pour les PAC HFC (−2 % hors fuites), tandis que les PAC au R290 baissent de <strong>−19 %</strong>.
+              </p>
+            </details>
+            <details>
+              <summary>Modèle continu masse–puissance (LOWESS sur 214 PAC)</summary>
+              <p>
+                Pour éviter les discontinuités des anciennes droites SYGREN, la HEIG-VD a calibré une courbe <strong>LOWESS</strong> sur 214 machines (fiches FDES/PEP et données HSLU),
+                ancrée exactement sur les 3 points de référence Carbotech (<strong>7, 15 et 50 kW</strong>) et linéarisée en 4 segments continus sur 1–100 kW.
+              </p>
+            </details>
+          </div>
+        </section>
+      </div>
+
+      <!-- SECTION 5 : TABLES DE DONNÉES CHARGÉES DEPUIS LES CSV -->
+      <details class="card" open>
+        <summary>📋 Correspondance des variantes de réfrigérants (data/fluides_options.csv)</summary>
+        <div id="guide-fluides-table" class="table-scroll"></div>
+      </details>
 
       <details class="card">
-        <summary>📊 Facteurs de référence chargés (base de données active)</summary>
+        <summary>📐 Segments d'extrapolation masse–puissance m = a·P + b (data/regles_masse.csv)</summary>
+        <div id="guide-masse-table" class="table-scroll"></div>
+      </details>
+
+      <details class="card">
+        <summary>📊 Valeurs de référence complètes par unité de PAC (base active)</summary>
         <div id="guide-ref-table" class="table-scroll"></div>
       </details>
     </section>
