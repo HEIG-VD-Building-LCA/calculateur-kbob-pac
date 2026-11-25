@@ -24,9 +24,9 @@ export const CADRE_LABELS = {
 };
 
 export const SCOPE_LABELS = {
-  [SCOPE_SIA_KBOB]: "Fabrication (y.c. fuites en usage B1 — 2 %/an sur 20 ans) et élimination (à utiliser pour un calcul SIA 390/1)",
-  [SCOPE_SIA_SEPARE]: "Fabrication, fuites en usage (B1) et élimination — vue détaillée (à utiliser pour un calcul SIA 390/1)",
-  [SCOPE_FAB_ELIM]: "Fabrication et élimination (A1–A3 / C1–C4)",
+  [SCOPE_SIA_KBOB]: "Fabrication (inclus fuites annuelles — 2 %/an sur 20 ans) et élimination (SIA 390/1)",
+  [SCOPE_SIA_SEPARE]: "Fabrication, fuites annuelles et élimination — vue détaillée (SIA 390/1)",
+  [SCOPE_FAB_ELIM]: "Fabrication et élimination",
 };
 
 export const UNITE_LABELS = {

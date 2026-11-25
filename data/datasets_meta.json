@@ -1,12 +1,7 @@
 {
   "kbob_2027_bafu2026.csv": {
     "label": "KBOB 2027 — BAFU:2026v1 (IPCC 2021 / EF 3.1)",
-    "description": "Données complémentaires proposées pour la liste KBOB 2027 (BAFU:2026v1, règles v9.0, 4 indicateurs KBOB + 18 indicateurs EF 3.1, fluides R410A / R32 / R290).",
+    "description": "Base de données BAFU:2026v1 (règles KBOB/ecobau v9.0, 4 indicateurs KBOB + 18 indicateurs EF 3.1, fluides R410A / R32 / R290).",
     "ordre": 1
-  },
-  "kbob_2022_uvek2021.csv": {
-    "label": "KBOB 2022 corrigé — UVEK 2021 (IPCC 2013)",
-    "description": "Données de référence KBOB 2022 après correction du double comptage des fuites (UVEK 2021, 4 indicateurs KBOB, fluides R410A / R290).",
-    "ordre": 2
   }
 }

@@ -7,7 +7,7 @@
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23dc2626'/><rect x='13' y='6' width='6' height='20' fill='white'/><rect x='6' y='13' width='20' height='6' fill='white'/></svg>" />
   <link rel="stylesheet" href="css/style.css" />
 
-  <!-- Bibliothèques client-side CSP-safe (zéro eval / zéro unsafe-eval) -->
+  <!-- Bibliothèques client-side CSP-safe -->
   <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
@@ -15,10 +15,11 @@
 </head>
 <body>
   <div class="page-wrapper">
+    <!-- Bannière KBOB d'origine -->
     <header class="kbob-header">
       <div class="kbob-header-left">
         <div class="kbob-logo">
-          <img src="assets/logo_kbob.svg" alt="Logo KBOB" onerror="this.style.display='none'" />
+          <img src="assets/logo_kbob.svg" alt="Logo KBOB" id="brand-logo" />
         </div>
         <div class="kbob-header-title">
           <h1>Calculateur KBOB / KBOB Rechner</h1>
@@ -28,421 +29,172 @@
       <div class="kbob-badge">Technique du bâtiment · PAC (1–100 kW)</div>
     </header>
 
-    <nav class="tabs-nav" role="tablist">
-      <button class="tab-btn active" data-target="tab-calc" role="tab">🧮 Calculateur KBOB / KBOB Rechner</button>
-      <button class="tab-btn" data-target="tab-guide" role="tab">📖 Méthodologie &amp; Données</button>
-    </nav>
+    <main>
+      <div id="warning-banner" class="warning-banner" role="alert"></div>
 
-    <div id="warning-banner" class="warning-toast" role="alert"></div>
+      <div class="calc-layout">
+        <!-- =====================================================
+             COLONNE GAUCHE : PARAMÈTRES UTILISATEUR
+             ===================================================== -->
+        <aside class="panel panel-inputs" aria-label="Paramètres de la pompe à chaleur">
+          <div class="panel-header">
+            <h2>Paramètres de la PAC</h2>
+          </div>
 
-    <!-- =========================================================
-         ONGLET 1 : CALCULATEUR KBOB
-         ========================================================= -->
-    <main id="tab-calc" class="tab-panel active">
-      <section class="card">
-        <div class="card-header">
-          <h2 class="card-title">1. Cadre d'évaluation et base de données</h2>
-        </div>
+          <div class="panel-body">
+            <!-- Technologie -->
+            <div class="field-group">
+              <span class="field-label">Technologie (source froide)</span>
+              <div id="tech-segmented" class="segmented-control" role="radiogroup" aria-label="Technologie"></div>
+            </div>
 
-        <div class="field-group" style="margin-bottom: 14px;">
-          <span class="field-label">Cadre d'évaluation</span>
-          <div class="radio-stack">
-            <label class="choice-pill">
-              <input type="radio" name="cadre" value="sia_390_1" checked />
-              <span><strong>Calcul selon SIA 390/1 ou labels / réglementations</strong> (Minergie-ECO, SNBS, etc.) — <em>sélectionne et verrouille automatiquement le périmètre incluant les fuites en usage (B1)</em></span>
-            </label>
-            <label class="choice-pill">
-              <input type="radio" name="cadre" value="libre" />
-              <span><strong>Écobilan libre</strong> — <em>permet de choisir librement le périmètre (avec ou sans fuites en usage)</em></span>
-            </label>
-          </div>
-        </div>
+            <!-- Puissance nominale -->
+            <div class="field-group">
+              <div class="label-row">
+                <label class="field-label" for="input-puissance">Puissance nominale</label>
+                <span class="field-bounds">1 – 100 kW</span>
+              </div>
+              <div class="power-input-row">
+                <input type="range" id="range-puissance" min="1" max="100" step="0.5" value="10" aria-label="Curseur de puissance nominale" />
+                <div class="number-unit-wrap">
+                  <input type="number" id="input-puissance" min="1" max="100" step="0.5" value="10" />
+                  <span class="input-unit">kW</span>
+                </div>
+              </div>
+            </div>
 
-        <div class="grid-2">
-          <div class="field-group" id="dataset-select-wrap">
-            <label class="field-label" for="select-dataset">Base de données d'écobilan</label>
-            <select id="select-dataset"></select>
-          </div>
-          <div class="field-group">
-            <label class="field-label" for="input-projet">Nom du projet (pour les exports)</label>
-            <input type="text" id="input-projet" value="Projet PAC" />
-          </div>
-        </div>
-        <p id="dataset-desc" class="field-hint" style="margin-top: 10px;"></p>
-      </section>
+            <!-- Fluide frigorigène -->
+            <div class="field-group">
+              <label class="field-label" for="select-fluide">Fluide frigorigène</label>
+              <select id="select-fluide"></select>
+              <div id="fluide-note" class="field-note"></div>
+            </div>
 
-      <details class="card">
-        <summary>📥 Import automatique PACesti / WPesti (bientôt disponible)</summary>
-        <div class="pacesti-grid">
-          <div class="pacesti-info">
-            <strong>Import de fiche Excel PACesti / WPesti (.xlsx) — En préparation :</strong><br />
-            Cette zone permettra prochainement de glisser-déposer directement l'export Excel de <em>PACesti / WPesti</em>
-            pour pré-remplir automatiquement la technologie, la puissance nominale, le réfrigérant et la masse de la PAC.
-          </div>
-          <div class="pacesti-dropzone">
-            📄 Glisser-déposer le fichier Excel PACesti / WPesti (.xlsx)<br />
-            <small>(Fonctionnalité bientôt active)</small>
-          </div>
-        </div>
-      </details>
+            <!-- Masse de la PAC -->
+            <div class="field-group">
+              <span class="field-label">Masse de la pompe à chaleur</span>
+              <div class="segmented-control" role="radiogroup" aria-label="Mode de définition de la masse">
+                <label class="seg-option">
+                  <input type="radio" name="masse_statut" value="inconnue" checked />
+                  <span>Estimée (LCA-PAC)</span>
+                </label>
+                <label class="seg-option">
+                  <input type="radio" name="masse_statut" value="connue" />
+                  <span>Connue (saisie)</span>
+                </label>
+              </div>
 
-      <section class="card">
-        <div class="card-header">
-          <h2 class="card-title">2. Caractéristiques de la pompe à chaleur</h2>
-        </div>
+              <div id="masse-saisie-wrap" class="mass-input-box" style="display: none;">
+                <label class="field-label-sm" for="input-masse">Masse réelle de l'appareil</label>
+                <div class="number-unit-wrap">
+                  <input type="number" id="input-masse" min="1" step="1" placeholder="Ex. 230" />
+                  <span class="input-unit">kg</span>
+                </div>
+              </div>
 
-        <div class="grid-3" style="margin-bottom: 14px;">
-          <div class="field-group">
-            <label class="field-label" for="select-tech">Technologie (source froide)</label>
-            <select id="select-tech"></select>
-          </div>
-          <div class="field-group">
-            <label class="field-label" for="input-puissance">Puissance nominale (kW) [1 – 100]</label>
-            <input type="number" id="input-puissance" value="10" step="0.5" />
-          </div>
-          <div class="field-group">
-            <label class="field-label" for="select-fluide">Fluide frigorigène</label>
-            <select id="select-fluide"></select>
-          </div>
-        </div>
+              <div id="mass-summary" class="mass-summary"></div>
+            </div>
 
-        <div class="grid-2" style="align-items: end;">
-          <div class="field-group">
-            <span class="field-label">Masse de la pompe à chaleur</span>
-            <div class="radio-row">
-              <label class="choice-pill">
-                <input type="radio" name="masse_statut" value="inconnue" checked />
-                <span>Inconnue (modèle masse–puissance LCA-PAC)</span>
-              </label>
-              <label class="choice-pill">
-                <input type="radio" name="masse_statut" value="connue" />
-                <span>Connue (saisie manuelle)</span>
-              </label>
+            <!-- Unité de référence -->
+            <div class="field-group">
+              <span class="field-label">Unité de référence</span>
+              <div class="segmented-control segmented-3" role="radiogroup" aria-label="Unité de référence">
+                <label class="seg-option">
+                  <input type="radio" name="unite" value="appareil" checked />
+                  <span>Par appareil</span>
+                </label>
+                <label class="seg-option">
+                  <input type="radio" name="unite" value="kw" />
+                  <span>Par kW</span>
+                </label>
+                <label class="seg-option">
+                  <input type="radio" name="unite" value="kg" />
+                  <span>Par kg</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- Nom du projet -->
+            <div class="field-group">
+              <label class="field-label" for="input-projet">Désignation du projet (pour l'export)</label>
+              <input type="text" id="input-projet" value="Projet PAC" placeholder="Ex. Immeuble Rue du Lac" />
+            </div>
+
+            <!-- Périmètre fixe & lien unique vers le fichier Word -->
+            <div class="scope-box">
+              <div class="scope-box-title">Périmètre et base de données</div>
+              <dl class="scope-dl">
+                <dt>Périmètre de calcul (SIA 390/1)</dt>
+                <dd>Fabrication (inclus fuites annuelles — 2 %/an sur 20 ans) et élimination</dd>
+                <dt>Base d'écobilan</dt>
+                <dd id="dataset-label-display">KBOB 2027 — BAFU:2026v1 (IPCC 2021 / EF 3.1)</dd>
+              </dl>
+              <a href="docs/methodologie_kbob_pac_2027.docx" download class="scope-doc-btn">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                  <polyline points="14 2 14 8 20 8"></polyline>
+                  <line x1="16" y1="13" x2="8" y2="13"></line>
+                  <line x1="16" y1="17" x2="8" y2="17"></line>
+                </svg>
+                <span>Télécharger la méthodologie (.docx)</span>
+              </a>
             </div>
           </div>
-          <div class="field-group" id="masse-saisie-wrap" style="display: none;">
-            <label class="field-label" for="input-masse">Masse réelle de la PAC (kg)</label>
-            <input type="number" id="input-masse" placeholder="Ex. 200" step="1" />
-          </div>
-        </div>
-      </section>
+        </aside>
 
-      <section class="card">
-        <div class="card-header">
-          <h2 class="card-title">3. Périmètre, unité de référence et indicateurs</h2>
-        </div>
+        <!-- =====================================================
+             COLONNE DROITE : RÉSULTATS EN TEMPS RÉEL
+             ===================================================== -->
+        <section class="results-column" aria-label="Résultats de l'écobilan">
+          <div class="panel">
+            <div class="panel-header panel-header-flex">
+              <div>
+                <h2>Résultats — Indicateurs KBOB</h2>
+                <p id="results-subtitle" class="panel-subtitle"></p>
+              </div>
+              <div class="export-bar">
+                <button type="button" id="btn-export-xlsx" class="btn btn-primary">Excel (.xlsx)</button>
+                <button type="button" id="btn-export-csv" class="btn btn-secondary">CSV</button>
+                <button type="button" id="btn-export-html" class="btn btn-secondary">Fiche HTML</button>
+                <button type="button" id="btn-print" class="btn btn-secondary">Imprimer / PDF</button>
+              </div>
+            </div>
 
-        <div class="grid-scope" style="margin-bottom: 14px;">
-          <div class="field-group">
-            <span class="field-label">Périmètre du cycle de vie</span>
-            <div class="radio-stack">
-              <label class="choice-pill">
-                <input type="radio" name="scope" value="sia_kbob" checked />
-                <span>Fabrication (y.c. fuites en usage B1 — 2 %/an sur 20 ans) et élimination <strong>(à utiliser pour un calcul SIA 390/1)</strong></span>
-              </label>
-              <label class="choice-pill">
-                <input type="radio" name="scope" value="sia_separe" />
-                <span>Fabrication, fuites en usage (B1) et élimination — vue détaillée <strong>(à utiliser pour un calcul SIA 390/1)</strong></span>
-              </label>
-              <label class="choice-pill">
-                <input type="radio" name="scope" value="fab_elim" />
-                <span>Fabrication et élimination (A1–A3 / C1–C4)</span>
-              </label>
+            <div class="panel-body">
+              <div id="kpi-cards" class="kpi-grid"></div>
+
+              <div class="charts-block">
+                <div class="charts-header">
+                  <h3>Répartition par phase du cycle de vie</h3>
+                  <div class="charts-legend">
+                    <span class="legend-item">
+                      <span class="legend-swatch swatch-fab"></span>
+                      <span>Fabrication (inclus fuites annuelles)</span>
+                    </span>
+                    <span class="legend-item">
+                      <span class="legend-swatch swatch-elim"></span>
+                      <span>Élimination</span>
+                    </span>
+                  </div>
+                </div>
+                <div id="charts-grid" class="charts-grid"></div>
+              </div>
             </div>
           </div>
 
-          <div class="field-group">
-            <span class="field-label">Unité de référence</span>
-            <div class="radio-stack">
-              <label class="choice-pill">
-                <input type="radio" name="unite" value="appareil" checked />
-                <span>Par appareil (unité PAC)</span>
-              </label>
-              <label class="choice-pill">
-                <input type="radio" name="unite" value="kw" />
-                <span>Par kW de puissance nominale</span>
-              </label>
-              <label class="choice-pill">
-                <input type="radio" name="unite" value="kg" />
-                <span>Par kg de PAC</span>
-              </label>
+          <div class="panel">
+            <div class="panel-header panel-header-flex">
+              <div>
+                <h2>Tableau complet des indicateurs</h2>
+                <p class="panel-subtitle">Indicateurs KBOB principaux et ensemble des 18 indicateurs complémentaires EF 3.1</p>
+              </div>
+              <span id="interp-badge" class="meta-chip"></span>
             </div>
+            <div class="table-scroll" id="results-table-wrap"></div>
           </div>
-        </div>
-
-        <div class="field-group" style="margin-bottom: 10px;">
-          <span class="field-label">Indicateurs affichés (cartes KPI &amp; graphiques)</span>
-          <div id="indicators-checkboxes" class="indicators-grid"></div>
-        </div>
-
-        <div id="ef31-toggle-wrap" style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
-          <label class="choice-pill" style="background: #ffffff;">
-            <input type="checkbox" id="cb-ef31" />
-            <span>Afficher tous les indicateurs complémentaires (EF 3.1) dans le tableau &amp; la fiche HTML</span>
-          </label>
-        </div>
-      </section>
-
-      <div id="meta-banner" class="calc-meta-banner"></div>
-      <div id="kpi-cards" class="kpi-grid"></div>
-
-      <section class="card">
-        <div class="card-header">
-          <h2 class="card-title">Répartition des impacts par phase du cycle de vie</h2>
-        </div>
-        <div id="charts-grid" class="charts-grid"></div>
-      </section>
-
-      <section class="card">
-        <div class="card-header">
-          <h2 class="card-title">Tableau récapitulatif au format KBOB</h2>
-        </div>
-        <div id="results-table-wrap" class="table-scroll"></div>
-        <div class="actions-bar">
-          <button type="button" id="btn-export-xlsx" class="btn btn-primary">📗 Exporter Excel — Format tableau KBOB 2027 (.xlsx)</button>
-          <button type="button" id="btn-export-html" class="btn btn-secondary">📄 Exporter la fiche HTML (KBOB)</button>
-          <button type="button" id="btn-export-csv" class="btn btn-secondary">📊 Exporter les données brutes (.csv)</button>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
-
-    <!-- =========================================================
-         ONGLET 2 : MÉTHODOLOGIE & DONNÉES (INTERACTIF)
-         ========================================================= -->
-    <section id="tab-guide" class="tab-panel">
-      <!-- Bannière d'introduction scientifique -->
-      <div class="meth-hero">
-        <div class="meth-hero-top">
-          <span class="meth-pill-badge">Projet OFEN LCA-PAC · HEIG-VD (Institut des Énergies)</span>
-          <div class="meth-tag-row">
-            <span class="meth-mini-tag">Base BAFU:2026v1</span>
-            <span class="meth-mini-tag">Règles KBOB/ecobau v9.0</span>
-            <span class="meth-mini-tag">IPCC 2021 (AR6) &amp; EF 3.1</span>
-            <span class="meth-mini-tag">214 PAC étalonnées</span>
-          </div>
-        </div>
-        <h2>Méthodologie &amp; Données complémentaires KBOB 2027</h2>
-        <p>
-          Les données complémentaires de pompes à chaleur (PAC) pour la liste <strong>KBOB 2027</strong> (onglet <em>Technique du bâtiment</em>)
-          permettent aux planificateurs d'évaluer le principal levier d'action identifié sur le cycle de vie de la machine :
-          <strong>le choix du réfrigérant</strong>, couplé à un modèle continu d'extrapolation entre la masse et la puissance nominale (1–100 kW).
-        </p>
-      </div>
-
-      <!-- SECTION 1 : EXPLORATEUR INTERACTIF DES 3 FAMILLES DE FLUIDES -->
-      <section class="card">
-        <div class="card-header">
-          <h2 class="card-title">1. Données complémentaires selon le type de réfrigérant (3 options KBOB 2027)</h2>
-          <span class="field-hint">Critère KBOB : écart &gt; ±15 % sur les GES</span>
-        </div>
-        <p style="margin-top: 0; color: var(--slate-700); font-size: 0.92rem;">
-          L'analyse de sensibilité menée par la HEIG-VD sur les modèles de référence (7, 15 et 50 kW, air-eau et saumure-eau) montre que le passage d'un HFC classique (R410A)
-          au propane (R290) réduit les émissions de GES de <strong>−53 % à −55 %</strong> en fabrication/élimination, et jusqu'à <strong>−77 %</strong> en incluant les fuites sur 20 ans.
-          Sélectionnez une famille ci-dessous pour consulter ses caractéristiques :
-        </p>
-
-        <div class="fluid-tabs" role="tablist">
-          <button type="button" class="fluid-tab-btn active" data-fluid-key="hfc" role="tab">
-            <span class="status-dot dot-red"></span>
-            <span>Option 1 · HFC générique (proxy R410A)</span>
-          </button>
-          <button type="button" class="fluid-tab-btn" data-fluid-key="r32" role="tab">
-            <span class="status-dot dot-amber"></span>
-            <span>Option 2 · HFC spécifique (R32)</span>
-          </button>
-          <button type="button" class="fluid-tab-btn" data-fluid-key="nat" role="tab">
-            <span class="status-dot dot-green"></span>
-            <span>Option 3 · Réfrigérant naturel (proxy R290)</span>
-          </button>
-        </div>
-
-        <div id="meth-fluid-panel" class="fluid-detail-card"></div>
-
-        <div class="hfo-callout">
-          <div class="hfo-callout-icon">⚠️</div>
-          <div>
-            <strong>Traitement des fluides HFO et mélanges HFC/HFO (ex. R1234ze, R454C, R454B) :</strong>
-            Bien que leur potentiel de réchauffement global (GWP) soit faible, les essais FTIR de la HEIG-VD et la littérature confirment leur dégradation rapide dans l'atmosphère en
-            <strong>acide trifluoroacétique (TFA)</strong>, un polluant persistant de la famille des <strong>PFAS</strong>.
-            Les méthodes ACV actuelles (y compris <em>UBP'21</em>) ne captant pas cette toxicité chronique, la HEIG-VD recommande d'assimiler par défaut les PAC HFO aux
-            <strong>PAC avec réfrigérant HFC générique</strong> (les <em>ecoCFC</em> d'ecobau classent les fluides naturels en 1<sup>re</sup> priorité, les HFO en 2<sup>e</sup> et les HFC en dernière priorité).
-          </div>
-        </div>
-      </section>
-
-      <!-- SECTION 2 : SIMULATEUR INTERACTIF — CAS D'EXEMPLE PAS-À-PAS -->
-      <section class="card meth-sim-card">
-        <div class="card-header">
-          <h2 class="card-title">2. Simulateur pédagogique : Cas d'exemple pas-à-pas</h2>
-          <button type="button" id="btn-apply-example" class="btn btn-primary" style="padding: 7px 13px; font-size: 0.84rem;">
-            Charger ce scénario dans le calculateur ↗
-          </button>
-        </div>
-        <p style="margin-top: 0; color: var(--slate-700); font-size: 0.91rem;">
-          Testez un scénario type ou modifiez librement les paramètres pour visualiser comment le calculateur estime la masse théorique $m_{\text{théo}}(P)$,
-          applique le ratio de masse $r_m$ et interpole entre les paliers de référence <strong>7, 15 et 50 kW</strong> (base BAFU:2026v1).
-        </p>
-
-        <div class="sim-controls-grid">
-          <div class="field-group">
-            <label class="field-label" for="meth-preset">Cas d'exemple préconfiguré</label>
-            <select id="meth-preset">
-              <option value="ex_rapport">Ex. Rapport KBOB : Air-Eau 10 kW, Naturel (R290), 230 kg</option>
-              <option value="ex_villa">Ex. Villa rénovation : Air-Eau 12 kW, HFC (R410A), masse estimée</option>
-              <option value="ex_collectif">Ex. Immeuble collectif : Saumure-Eau 40 kW, HFC R32, 340 kg</option>
-              <option value="ex_ref50">Ex. Chaufferie 50 kW : Air-Eau 50 kW, Naturel (R290), 781 kg</option>
-              <option value="custom">Configuration personnalisée…</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label class="field-label" for="meth-tech">Technologie (source froide)</label>
-            <select id="meth-tech">
-              <option value="Air-Eau">Air-Eau</option>
-              <option value="Saumure-Eau">Saumure-Eau</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label class="field-label" for="meth-power">Puissance nominale [kW]</label>
-            <input type="number" id="meth-power" min="1" max="100" step="0.5" value="10" />
-          </div>
-
-          <div class="field-group">
-            <label class="field-label" for="meth-mass-mode">Connaissance de la masse</label>
-            <select id="meth-mass-mode">
-              <option value="connue">Masse connue (saisie)</option>
-              <option value="inconnue">Masse inconnue (estimée)</option>
-            </select>
-          </div>
-
-          <div class="field-group" id="meth-mass-input-wrap">
-            <label class="field-label" for="meth-mass-val">Masse saisie [kg]</label>
-            <input type="number" id="meth-mass-val" min="10" max="3000" step="1" value="230" />
-          </div>
-
-          <div class="field-group">
-            <label class="field-label" for="meth-fluid">Famille de fluide analysée</label>
-            <select id="meth-fluid">
-              <option value="r290">Naturel (R290 / propane)</option>
-              <option value="r32">HFC spécifique (R32)</option>
-              <option value="inconnu">HFC générique (R410A)</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label class="field-label" for="meth-scope">Périmètre du cycle de vie</label>
-            <select id="meth-scope">
-              <option value="sia_kbob">SIA 390/1 (Fab. + Fuites 20 ans + Élim.)</option>
-              <option value="fab_elim">Fabrication + Élimination (A1–C4)</option>
-            </select>
-          </div>
-
-          <div class="field-group">
-            <label class="field-label" for="meth-indicator">Indicateur comparé</label>
-            <select id="meth-indicator">
-              <option value="ges">Émissions de GES fossiles [kg CO₂-eq]</option>
-              <option value="ubp">Écopoints [UBP'21]</option>
-              <option value="nre">Énergie primaire NRE [kWh oil-eq]</option>
-              <option value="re">Énergie primaire RE [kWh oil-eq]</option>
-            </select>
-          </div>
-        </div>
-
-        <!-- Décomposition mathématique en 4 étapes -->
-        <div id="meth-steps-container" class="sim-steps-grid"></div>
-
-        <!-- Graphique comparatif des 3 fluides -->
-        <div class="sim-compare-box">
-          <div class="sim-compare-header">
-            <h4>Comparaison directe des 3 variantes de réfrigérants pour cette machine</h4>
-            <span id="meth-compare-subtitle" class="field-hint"></span>
-          </div>
-          <div id="meth-compare-bars" class="compare-bars-list"></div>
-        </div>
-      </section>
-
-      <!-- SECTION 3 : FRONTIÈRES DU SYSTÈME & CORRECTIONS KBOB 2027 -->
-      <div class="grid-2">
-        <section class="card">
-          <div class="card-header">
-            <h2 class="card-title">3. Frontières du système &amp; Fuites (SIA 390/1)</h2>
-          </div>
-          <ul class="lifecycle-list">
-            <li>
-              <span class="phase-badge badge-fab">A1–A3</span>
-              <div>
-                <strong>Fabrication :</strong> Extraction des métaux (acier, cuivre, aluminium), composants électroniques, énergie d'assemblage en usine et fuites initiales lors du scellement (<strong>3 %</strong> de la charge).
-              </div>
-            </li>
-            <li>
-              <span class="phase-badge badge-b1">B1 · SIA 390/1</span>
-              <div>
-                <strong>Fuites en fonctionnement (20 ans) :</strong> Hypothèse standard KBOB de <strong>2 %/an</strong> pendant 20 ans (soit <strong>40 %</strong> de la charge initiale perdue et rechargée annuellement). Dans le format KBOB 2027, ces impacts sont ajoutés au poste <em>Fabrication</em> afin d'éviter leur omission dans les bilans bâtiment SIA 390/1.
-              </div>
-            </li>
-            <li>
-              <span class="phase-badge badge-elim">C1–C4</span>
-              <div>
-                <strong>Élimination :</strong> Démantèlement, traitement DEEE et fuites résiduelles lors du démantèlement (<strong>19 %</strong> de la charge initiale).
-              </div>
-            </li>
-            <li>
-              <span class="phase-badge badge-neutral">Hors périmètre</span>
-              <div>
-                <strong>Consommation électrique (B6) &amp; Module D :</strong> L'électricité consommée en fonctionnement est traitée séparément dans l'onglet <em>« Énergie »</em> (par kWh de chaleur utile) de la liste KBOB.
-              </div>
-            </li>
-          </ul>
-        </section>
-
-        <section class="card">
-          <div class="card-header">
-            <h2 class="card-title">4. Nouveautés &amp; Corrections (KBOB 2022 → 2027)</h2>
-          </div>
-          <div class="meth-faq">
-            <details open>
-              <summary>Correction du double comptage des fuites (−21 % GES)</summary>
-              <p>
-                Un audit de la HEIG-VD (validé par Carbotech et R. Frischknecht) a corrigé une erreur de double comptage présente dans la base UVEK 2021 :
-                les fuites sont ramenées de <strong>22 % à 3 %</strong> en fabrication et ajustées de <strong>11 % à 19 %</strong> en élimination (total <strong>22 %</strong> au lieu de 33 %).
-              </p>
-            </details>
-            <details>
-              <summary>Migration UVEK 2021 → BAFU:2026v1 &amp; IPCC 2021 (AR6)</summary>
-              <p>
-                La mise à jour vers <strong>BAFU:2026v1</strong> réduit les émissions de fabrication de −9 à −20 % et l'énergie primaire NRE de −19 à −26 % (mix ENTSO-E plus renouvelable).
-                En parallèle, le passage au GIEC 2021 (AR6) relève le GWP<sub>100</sub> du R410A de 1'924 à <strong>2'256 kg CO₂-eq/kg (+17 %)</strong> :
-                les deux effets se compensent presque pour les PAC HFC (−2 % hors fuites), tandis que les PAC au R290 baissent de <strong>−19 %</strong>.
-              </p>
-            </details>
-            <details>
-              <summary>Modèle continu masse–puissance (LOWESS sur 214 PAC)</summary>
-              <p>
-                Pour éviter les discontinuités des anciennes droites SYGREN, la HEIG-VD a calibré une courbe <strong>LOWESS</strong> sur 214 machines (fiches FDES/PEP et données HSLU),
-                ancrée exactement sur les 3 points de référence Carbotech (<strong>7, 15 et 50 kW</strong>) et linéarisée en 4 segments continus sur 1–100 kW.
-              </p>
-            </details>
-          </div>
-        </section>
-      </div>
-
-      <!-- SECTION 5 : TABLES DE DONNÉES CHARGÉES DEPUIS LES CSV -->
-      <details class="card" open>
-        <summary>📋 Correspondance des variantes de réfrigérants (data/fluides_options.csv)</summary>
-        <div id="guide-fluides-table" class="table-scroll"></div>
-      </details>
-
-      <details class="card">
-        <summary>📐 Segments d'extrapolation masse–puissance m = a·P + b (data/regles_masse.csv)</summary>
-        <div id="guide-masse-table" class="table-scroll"></div>
-      </details>
-
-      <details class="card">
-        <summary>📊 Valeurs de référence complètes par unité de PAC (base active)</summary>
-        <div id="guide-ref-table" class="table-scroll"></div>
-      </details>
-    </section>
 
     <footer class="kbob-footer">
       Développé par la <strong>Haute École d'Ingénierie et de Gestion du canton de Vaud (HEIG-VD — Institut des Énergies)</strong>

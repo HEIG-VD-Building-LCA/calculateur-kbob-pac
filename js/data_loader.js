@@ -1,6 +1,6 @@
 /**
  * js/data_loader.js
- * Chargement 100 % dynamique des fichiers CSV et JSON depuis data/ via fetch + PapaParse.
+ * Chargement dynamique de la base unique BAFU:2026v1 et des tables de référence CSV.
  */
 
 const COLONNES_METADONNEES = new Set([
@@ -10,6 +10,8 @@ const COLONNES_METADONNEES = new Set([
   "masse_ref_kg",
   "phase",
 ]);
+
+const DEFAULT_DATASET_FILE = "kbob_2027_bafu2026.csv";
 
 function parseNumber(val) {
   if (val === null || val === undefined || val === "") return NaN;
@@ -56,7 +58,7 @@ export async function loadAllData() {
     fetchText("data/regles_masse.csv"),
     fetchText("data/fluides_options.csv"),
     fetchJsonOptional("data/datasets_meta.json", {}),
-    fetchJsonOptional("data/datasets_manifest.json", { datasets: [] }),
+    fetchJsonOptional("data/datasets_manifest.json", { datasets: [DEFAULT_DATASET_FILE] }),
   ]);
 
   const catalogueIndicateurs = {};
@@ -104,92 +106,91 @@ export async function loadAllData() {
     .filter((o) => o.label && o.fluide_reference)
     .sort((a, b) => a.ordre - b.ordre);
 
-  const fileSet = new Set([...(manifest.datasets || []), ...Object.keys(metaDict || {})]);
-  const filenames = Array.from(fileSet).sort((a, b) => {
-    const oa = metaDict[a]?.ordre ?? 999;
-    const ob = metaDict[b]?.ordre ?? 999;
-    return oa !== ob ? oa - ob : a.localeCompare(b);
-  });
+  // Base unique : priorité à BAFU:2026v1 (premier élément du manifest)
+  const manifestList = Array.isArray(manifest.datasets) && manifest.datasets.length
+    ? manifest.datasets
+    : [DEFAULT_DATASET_FILE];
+  const filename =
+    manifestList.find((f) => f.includes("bafu")) || manifestList[0] || DEFAULT_DATASET_FILE;
 
-  const datasets = [];
-  for (const filename of filenames) {
-    const rawText = await fetchText(`data/datasets/${filename}`);
-    const rawRows = parseCsvText(rawText);
-    if (!rawRows.length) continue;
-
-    const allCols = Object.keys(rawRows[0]);
-    const indCols = allCols.filter((c) => !COLONNES_METADONNEES.has(c));
-
-    const indicators = indCols
-      .map((col, idx) => {
-        if (catalogueIndicateurs[col]) return catalogueIndicateurs[col];
-        return {
-          id: col,
-          nom: col.replace(/_/g, " "),
-          nom_court: col.replace(/_/g, " "),
-          unite: "unité",
-          decimales: 2,
-          notation_scientifique: false,
-          groupe: "principal",
-          afficher_par_defaut: true,
-          ordre: 500 + idx,
-        };
-      })
-      .sort((a, b) => a.ordre - b.ordre || a.id.localeCompare(b.id));
-
-    const rows = rawRows.map((r) => {
-      const clean = {
-        technologie: String(r.technologie || "").trim(),
-        fluide: String(r.fluide || "").trim(),
-        puissance_kw: parseNumber(r.puissance_kw),
-        masse_ref_kg: parseNumber(r.masse_ref_kg),
-        phase: String(r.phase || "").trim().toLowerCase(),
-      };
-      for (const ind of indicators) {
-        const val = parseNumber(r[ind.id]);
-        clean[ind.id] = Number.isFinite(val) ? val : 0.0;
-      }
-      return clean;
-    });
-
-    const technologies = Array.from(new Set(rows.map((r) => r.technologie)));
-    const fluidesParTech = {};
-    for (const tech of technologies) {
-      fluidesParTech[tech] = Array.from(
-        new Set(rows.filter((r) => r.technologie === tech).map((r) => r.fluide))
-      );
-    }
-
-    const fluidesPresents = new Set(rows.map((r) => r.fluide));
-    const optionsCompatibles = fluidesOptions.filter((o) => fluidesPresents.has(o.fluide_reference));
-    const couverts = new Set(optionsCompatibles.map((o) => o.fluide_reference));
-    let autoIdx = 100;
-    for (const flu of fluidesPresents) {
-      if (!couverts.has(flu)) {
-        optionsCompatibles.push({
-          ordre: autoIdx++,
-          id: `auto_${autoIdx}`,
-          label: flu,
-          fluide_reference: flu,
-          categorie: "Personnalisé",
-          note_methodologique: "Fluide détecté directement depuis le fichier CSV.",
-        });
-      }
-    }
-
-    const meta = metaDict[filename] || {};
-    datasets.push({
-      id: filename,
-      filename,
-      label: meta.label || filename.replace(/\.csv$/i, "").replace(/_/g, " "),
-      description: meta.description || `Jeu de données chargé depuis ${filename}.`,
-      rows,
-      indicators,
-      technologies,
-      fluidesParTech,
-      refrigerantOptions: optionsCompatibles,
-    });
+  const rawText = await fetchText(`data/datasets/${filename}`);
+  const rawRows = parseCsvText(rawText);
+  if (!rawRows.length) {
+    throw new Error(`Le jeu de données ${filename} est vide.`);
   }
 
-  return { datasets, reglesMasse };
+  const allCols = Object.keys(rawRows[0]);
+  const indCols = allCols.filter((c) => !COLONNES_METADONNEES.has(c));
+
+  const indicators = indCols
+    .map((col, idx) => {
+      if (catalogueIndicateurs[col]) return catalogueIndicateurs[col];
+      return {
+        id: col,
+        nom: col.replace(/_/g, " "),
+        nom_court: col.replace(/_/g, " "),
+        unite: "unité",
+        decimales: 2,
+        notation_scientifique: false,
+        groupe: "principal",
+        afficher_par_defaut: true,
+        ordre: 500 + idx,
+      };
+    })
+    .sort((a, b) => a.ordre - b.ordre || a.id.localeCompare(b.id));
+
+  const rows = rawRows.map((r) => {
+    const clean = {
+      technologie: String(r.technologie || "").trim(),
+      fluide: String(r.fluide || "").trim(),
+      puissance_kw: parseNumber(r.puissance_kw),
+      masse_ref_kg: parseNumber(r.masse_ref_kg),
+      phase: String(r.phase || "").trim().toLowerCase(),
+    };
+    for (const ind of indicators) {
+      const val = parseNumber(r[ind.id]);
+      clean[ind.id] = Number.isFinite(val) ? val : 0.0;
+    }
+    return clean;
+  });
+
+  const technologies = Array.from(new Set(rows.map((r) => r.technologie)));
+  const fluidesParTech = {};
+  for (const tech of technologies) {
+    fluidesParTech[tech] = Array.from(
+      new Set(rows.filter((r) => r.technologie === tech).map((r) => r.fluide))
+    );
+  }
+
+  const fluidesPresents = new Set(rows.map((r) => r.fluide));
+  const optionsCompatibles = fluidesOptions.filter((o) => fluidesPresents.has(o.fluide_reference));
+  const couverts = new Set(optionsCompatibles.map((o) => o.fluide_reference));
+  let autoIdx = 100;
+  for (const flu of fluidesPresents) {
+    if (!couverts.has(flu)) {
+      optionsCompatibles.push({
+        ordre: autoIdx++,
+        id: `auto_${autoIdx}`,
+        label: flu,
+        fluide_reference: flu,
+        categorie: "Personnalisé",
+        note_methodologique: "Fluide détecté directement depuis le fichier CSV.",
+      });
+    }
+  }
+
+  const meta = metaDict[filename] || {};
+  const dataset = {
+    id: filename,
+    filename,
+    label: meta.label || "KBOB 2027 — BAFU:2026v1 (IPCC 2021 / EF 3.1)",
+    description: meta.description || `Jeu de données chargé depuis ${filename}.`,
+    rows,
+    indicators,
+    technologies,
+    fluidesParTech,
+    refrigerantOptions: optionsCompatibles,
+  };
+
+  return { dataset, reglesMasse };
 }
