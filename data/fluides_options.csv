@@ -1,7 +1,8 @@
 ﻿ordre;id;label;fluide_reference;categorie;note_methodologique
-1;inconnu;Inconnu (par défaut : HFC standard);HFC (R410A);HFC;Reprend strictement les valeurs des PAC HFC (R410A) par approche conservatrice.
-2;autres_hfc;Autres réfrigérants HFC (R410A, R407C, R134a, etc.);HFC (R410A);HFC;Reprend strictement les valeurs des PAC HFC (R410A).
-3;hfo;Réfrigérants HFO et mélanges HFC/HFO (R1234ze, R454B/C, etc.);HFC (R410A);HFO;Assimilé par défaut aux PAC HFC (R410A) par principe de précaution vis-à-vis de la dégradation en TFA/PFAS (KBOB 2027).
-4;r32;HFC R32;HFC (R32);HFC R32;Donnée spécifique HFC R32 (PRG100 AR6 = 771 kg CO2-eq/kg, BAFU:2026v1).
-5;r290;Naturel R290 (propane);Naturel (R290);Naturel;Donnée de référence fluide naturel modélisée avec le propane R290 (1re priorité ecoCFC).
-6;autres_naturels;Autres fluides naturels (CO2 / R744, NH3 / R717, isobutane, etc.);Naturel (R290);Naturel;Reprend strictement les valeurs et indicateurs de la variante R290 (propane).
+1;inconnu;Inconnu;HFC (R410A);HFC;Reprend strictement les valeurs des PAC HFC (R410A) par approche conservatrice.
+2;r410a;HFC R410A;HFC (R410A);HFC;Donnée de référence HFC R410A (BAFU:2026v1).
+3;r32;HFC R32;HFC (R32);HFC R32;Donnée spécifique HFC R32 (PRG100 AR6 = 771 kg CO2-eq/kg, BAFU:2026v1).
+4;r290;Naturel R290 (propane);Naturel (R290);Naturel;Donnée de référence fluide naturel modélisée avec le propane R290 (1re priorité ecoCFC).
+5;autres_hfc;Autres HFC;HFC (R410A);HFC;Reprend strictement les valeurs des PAC HFC (R410A).
+6;hfo;HFO et mélange HFO/HFC;HFC (R410A);HFO;Assimilé par défaut aux PAC HFC (R410A) par principe de précaution vis-à-vis de la dégradation en TFA/PFAS (KBOB 2027).
+7;autres_naturels;Autres réfrigérants naturels;Naturel (R290);Naturel;Reprend strictement les valeurs et indicateurs de la variante R290 (propane).

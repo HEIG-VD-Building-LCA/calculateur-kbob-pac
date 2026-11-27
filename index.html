@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Calculateur de Pompe à chaleur — KBOB</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23007a53'/><rect x='13' y='6' width='6' height='20' fill='white'/><rect x='6' y='13' width='20' height='6' fill='white'/></svg>" />
+  <title>Calculateur KBOB Pompe à chaleur</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%232c7a6b'/><rect x='13' y='6' width='6' height='20' fill='white'/><rect x='6' y='13' width='20' height='6' fill='white'/></svg>" />
   <link rel="stylesheet" href="css/style.css" />
 
   <!-- Bibliothèques client-side CSP-safe -->
@@ -15,22 +15,28 @@
 </head>
 <body>
   <div class="page-wrapper">
-    <!-- En-tête blanc encadré vert + filigrane REVIEW + switch FR/DE/IT/EN -->
+    <!-- En-tête blanc encadré vert adouci + filigrane FOR KBOB-REVIEW + switch FR/DE/IT/EN -->
     <header class="kbob-header">
-      <div class="kbob-logo">
-        <img src="assets/logo_KBOB.png" alt="Logo KBOB" id="brand-logo" />
-        <span class="logo-watermark" aria-hidden="true">REVIEW</span>
-      </div>
-      <div class="kbob-header-right">
+      <div class="kbob-header-top">
+        <p class="header-kicker" data-i18n="headerKicker">
+          Données des écobilans dans la construction (Technique du bâtiment) : Pour les planificateurs
+        </p>
         <nav class="lang-switcher" aria-label="Langue / Sprache / Lingua / Language">
           <button type="button" class="lang-btn active" data-lang="fr" aria-pressed="true">FR</button>
           <button type="button" class="lang-btn" data-lang="de" aria-pressed="false">DE</button>
           <button type="button" class="lang-btn" data-lang="it" aria-pressed="false">IT</button>
           <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
         </nav>
+      </div>
+
+      <div class="kbob-header-main">
+        <div class="kbob-logo">
+          <img src="assets/logo_KBOB.png" alt="Logo KBOB" class="safe-logo" />
+          <span class="logo-watermark" aria-hidden="true">FOR KBOB-REVIEW</span>
+        </div>
         <div class="kbob-header-title">
-          <h1 data-i18n="headerTitle">Calculateur de Pompe à chaleur</h1>
-          <p data-i18n="headerSubtitle">Technique du bâtiment · PAC (1–100 kW)</p>
+          <h1 data-i18n="headerTitle">Calculateur KBOB Pompe à chaleur</h1>
+          <p data-i18n="headerSubtitle">Domaine d'utilisation : PAC de puissance jusqu'à 100 kW environ</p>
         </div>
       </div>
     </header>
@@ -69,11 +75,10 @@
               </div>
             </div>
 
-            <!-- Fluide frigorigène -->
+            <!-- Fluide frigorigène (menu épuré, sans note dessous) -->
             <div class="field-group">
               <label class="field-label" for="select-fluide" data-i18n="labelFluid">Fluide frigorigène</label>
               <select id="select-fluide"></select>
-              <div id="fluide-note" class="field-note"></div>
             </div>
 
             <!-- Masse de la PAC -->
@@ -120,30 +125,37 @@
               </div>
             </div>
 
-            <!-- Nom du projet -->
-            <div class="field-group">
-              <label class="field-label" for="input-projet" data-i18n="labelProject">Désignation du projet (pour l'export)</label>
-              <input type="text" id="input-projet" value="Projet PAC" data-i18n-placeholder="projectPlaceholder" placeholder="Ex. Immeuble Rue du Lac" />
-            </div>
-
-            <!-- Périmètre fixe & lien unique vers le fichier Word -->
+            <!-- Périmètre fixe & téléchargement des 2 rapports PDF -->
             <div class="scope-box">
-              <div class="scope-box-title" data-i18n="scopeBoxTitle">Périmètre et base de données</div>
+              <div class="scope-box-title" data-i18n="scopeBoxTitle">Périmètre et données de référence</div>
               <dl class="scope-dl">
-                <dt data-i18n="scopeTerm">Périmètre de calcul (SIA 390/1)</dt>
+                <dt data-i18n="scopeTerm">Périmètre de calcul (KBOB 2027)</dt>
                 <dd data-i18n="scopeDesc">Fabrication¹ et élimination</dd>
-                <dt data-i18n="dbTerm">Base d'écobilan</dt>
+                <dt data-i18n="dbTerm">Données de référence des calculs</dt>
                 <dd id="dataset-label-display" data-i18n="dbLabel">KBOB 2027 — BAFU:2026v1 (IPCC 2021 / EF 3.1)</dd>
               </dl>
-              <a id="doc-download-link" href="docs/methodologie_kbob_pac_2027.docx" download class="scope-doc-btn">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                  <polyline points="14 2 14 8 20 8"></polyline>
-                  <line x1="16" y1="13" x2="8" y2="13"></line>
-                  <line x1="16" y1="17" x2="8" y2="17"></line>
-                </svg>
-                <span data-i18n="downloadDoc">Télécharger la méthodologie (.docx)</span>
-              </a>
+
+              <div class="scope-docs">
+                <div class="scope-docs-heading" data-i18n="downloadDocsHeading">Télécharger :</div>
+                <a id="doc-methodo-link" href="docs/rapport_methodologique_pac_kbob2027.pdf" download class="scope-doc-btn">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                  </svg>
+                  <span data-i18n="downloadMethodo">Rapport méthodologique (PDF)</span>
+                </a>
+                <a id="doc-cdc-link" href="docs/cahier_des_charges_calculateur_pac.pdf" download class="scope-doc-btn">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                    <polyline points="14 2 14 8 20 8"></polyline>
+                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                  </svg>
+                  <span data-i18n="downloadCdc">Cahier des charges du calculateur (PDF)</span>
+                </a>
+              </div>
             </div>
           </div>
         </aside>
@@ -159,8 +171,10 @@
             </div>
 
             <div class="panel-body">
+              <!-- 3 KPI Screening : Écopoints (UBP'21), Émissions de GES fossiles, Énergie Primaire (NRE) -->
               <div id="kpi-cards" class="kpi-grid"></div>
 
+              <!-- 3 Histogrammes empilés -->
               <div class="charts-block">
                 <div class="charts-header">
                   <h3 data-i18n="chartsTitle">Répartition par phase du cycle de vie</h3>
@@ -209,10 +223,10 @@
         <div class="export-footer-inner">
           <div class="export-footer-label">
             <strong data-i18n="exportTitle">Exporter les résultats</strong>
-            <span data-i18n="exportSubtitle">Téléchargez la fiche complète au format souhaité (PDF identique à la fiche HTML).</span>
+            <span data-i18n="exportSubtitle">Téléchargez la fiche complète au format souhaité (Excel KBOB 2027, CSV, HTML ou PDF).</span>
           </div>
           <div class="export-bar">
-            <button type="button" id="btn-export-xlsx" class="btn btn-primary" data-i18n="btnExcel">Excel (.xlsx)</button>
+            <button type="button" id="btn-export-xlsx" class="btn btn-primary" data-i18n="btnExcel">Excel KBOB 2027 (.xlsx)</button>
             <button type="button" id="btn-export-csv" class="btn btn-secondary" data-i18n="btnCsv">CSV</button>
             <button type="button" id="btn-export-html" class="btn btn-secondary" data-i18n="btnHtml">Fiche HTML</button>
             <button type="button" id="btn-export-pdf" class="btn btn-secondary" data-i18n="btnPdf">PDF</button>
@@ -222,13 +236,21 @@
 
       <!-- Annotation de bas de page -->
       <p class="footnote-note" data-i18n-html="footnoteHtml">
-        <strong>¹ Fabrication :</strong> inclut les fuites annuelles de fluide frigorigène en phase d'utilisation (2 %/an sur 20 ans, conformément à la norme SIA 390/1).
+        <strong>¹ Fabrication :</strong> inclut les fuites annuelles de fluide frigorigène en phase d'utilisation (2 %/an sur 20 ans selon hypothèse KBOB Kägi et al., 2021, pour le calcul de l'écobilan du domaine « Construction » de la SIA 390/1).
       </p>
     </main>
 
-    <footer class="kbob-footer" data-i18n-html="footerHtml">
-      Développé par la <strong>Haute École d'Ingénierie et de Gestion du canton de Vaud (HEIG-VD — Institut des Énergies)</strong>
-      et financé par l'<strong>Office fédéral de l'énergie (OFEN)</strong>, dans le cadre du projet <strong>LCA-PAC</strong>.
+    <!-- Pied de page avec logos co-financeurs -->
+    <footer class="kbob-footer">
+      <div class="footer-funding-text" data-i18n-html="footerHtml">
+        Développé par la <strong>Haute École d'Ingénierie et de Gestion du canton de Vaud (HEIG-VD — Institut des Énergies)</strong>
+        et co-financé par l'<strong>Office fédéral de l'énergie (OFEN)</strong>, le <strong>Canton de Vaud (DIREN)</strong> et les <strong>Services Industriels de Genève (SIG)</strong>, dans le cadre du projet <strong>LCA-PAC</strong>.
+      </div>
+      <div class="footer-logos" aria-label="Co-financeurs">
+        <img src="assets/logo_ofen.png" alt="Confédération suisse — OFEN" class="footer-logo safe-logo" />
+        <img src="assets/logo_diren.png" alt="Canton de Vaud — DIREN" class="footer-logo safe-logo" />
+        <img src="assets/logo_sig.png" alt="SIG Genève" class="footer-logo safe-logo" />
+      </div>
     </footer>
   </div>
 </body>

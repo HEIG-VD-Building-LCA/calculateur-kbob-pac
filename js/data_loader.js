@@ -1,6 +1,7 @@
 /**
  * js/data_loader.js
  * Chargement dynamique de la base unique BAFU:2026v1 et des tables de référence CSV.
+ * Duplique automatiquement `ges` vers `ef_cc_fossile` pour l'alignement complet EF 3.1.
  */
 
 const COLONNES_METADONNEES = new Set([
@@ -106,10 +107,10 @@ export async function loadAllData() {
     .filter((o) => o.label && o.fluide_reference)
     .sort((a, b) => a.ordre - b.ordre);
 
-  // Base unique : priorité à BAFU:2026v1 (premier élément du manifest)
-  const manifestList = Array.isArray(manifest.datasets) && manifest.datasets.length
-    ? manifest.datasets
-    : [DEFAULT_DATASET_FILE];
+  const manifestList =
+    Array.isArray(manifest.datasets) && manifest.datasets.length
+      ? manifest.datasets
+      : [DEFAULT_DATASET_FILE];
   const filename =
     manifestList.find((f) => f.includes("bafu")) || manifestList[0] || DEFAULT_DATASET_FILE;
 
@@ -121,6 +122,14 @@ export async function loadAllData() {
 
   const allCols = Object.keys(rawRows[0]);
   const indCols = allCols.filter((c) => !COLONNES_METADONNEES.has(c));
+
+  const synthCcFossile =
+    indCols.includes("ges") &&
+    !indCols.includes("ef_cc_fossile") &&
+    Boolean(catalogueIndicateurs.ef_cc_fossile);
+  if (synthCcFossile) {
+    indCols.push("ef_cc_fossile");
+  }
 
   const indicators = indCols
     .map((col, idx) => {
@@ -148,8 +157,13 @@ export async function loadAllData() {
       phase: String(r.phase || "").trim().toLowerCase(),
     };
     for (const ind of indicators) {
-      const val = parseNumber(r[ind.id]);
-      clean[ind.id] = Number.isFinite(val) ? val : 0.0;
+      if (ind.id === "ef_cc_fossile" && synthCcFossile) {
+        const valGes = parseNumber(r.ges);
+        clean.ef_cc_fossile = Number.isFinite(valGes) ? valGes : 0.0;
+      } else {
+        const val = parseNumber(r[ind.id]);
+        clean[ind.id] = Number.isFinite(val) ? val : 0.0;
+      }
     }
     return clean;
   });

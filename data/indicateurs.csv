@@ -1,23 +1,24 @@
 ﻿id;nom;nom_court;unite;decimales;notation_scientifique;groupe;afficher_par_defaut;ordre
-ubp;Écopoints (UBP'21);UBP'21;UBP;0;non;principal;oui;1
-ges;Émissions de GES fossiles;GES fossiles;kg CO₂-eq;1;non;principal;oui;2
-nre;Énergie primaire non renouvelable (NRE);Énergie NRE;kWh oil-eq;1;non;principal;oui;3
-re;Énergie primaire renouvelable (RE);Énergie RE;kWh oil-eq;1;non;principal;oui;4
+ubp;Écopoints (UBP'21);Écopoints (UBP'21);UBP;0;non;principal;oui;1
+ges;Émissions de GES fossiles;Émissions de GES fossiles;kg CO₂-eq;1;non;principal;oui;2
+nre;Énergie Primaire (NRE);Énergie Primaire (NRE);kWh oil-eq;1;non;principal;oui;3
+re;Énergie Primaire (RE);Énergie Primaire (RE);kWh oil-eq;1;non;principal;oui;4
 ef_cc_total;Changement climatique — total (EF 3.1);CC total;kg CO₂-eq;1;non;ef31;non;10
 ef_cc_biogene;Changement climatique — biogénique (EF 3.1);CC biogène;kg CO₂-eq;2;oui;ef31;non;11
-ef_cc_luluc;Changement climatique — affectation des sols (EF 3.1);CC LULUC;kg CO₂-eq;3;oui;ef31;non;12
-ef_acidification;Acidification (EF 3.1);Acidification;mol H⁺-eq;2;oui;ef31;non;13
-ef_ozone_depletion;Appauvrissement de la couche d'ozone (EF 3.1);Couche d'ozone;kg CFC-11-eq;2;oui;ef31;non;14
-ef_tox_cancer;Toxicité humaine : cancer (EF 3.1);Tox. cancer;CTUh;2;oui;ef31;non;15
-ef_tox_non_cancer;Toxicité humaine : hors cancer (EF 3.1);Tox. hors cancer;CTUh;2;oui;ef31;non;16
-ef_particules;Particules fines (EF 3.1);Particules fines;disease inc.;2;oui;ef31;non;17
-ef_rayonnements;Rayonnements ionisants (EF 3.1);Rayonnements;kBq U-235-eq;1;oui;ef31;non;18
-ef_ozone_photo;Ozone photochimique (EF 3.1);Ozone photo.;kg NMVOC-eq;2;oui;ef31;non;19
-ef_eutro_terrestre;Eutrophisation terrestre (EF 3.1);Eutro. terrestre;mol N-eq;2;oui;ef31;non;20
-ef_eutro_eau_douce;Eutrophisation eau douce (EF 3.1);Eutro. eau douce;kg P-eq;2;oui;ef31;non;21
-ef_eutro_marine;Eutrophisation marine (EF 3.1);Eutro. marine;kg N-eq;2;oui;ef31;non;22
-ef_ecotox_eau_douce;Écotoxicité eau douce (EF 3.1);Écotoxicité;CTUe;1;oui;ef31;non;23
-ef_utilisation_sols;Utilisation des sols (EF 3.1);Sols;Pt;1;oui;ef31;non;24
-ef_utilisation_eau;Utilisation de l'eau (EF 3.1);Eau;m³ world-eq;1;oui;ef31;non;25
-ef_ressources_min;Épuisement des ressources : minéraux et métaux (EF 3.1);Minéraux/métaux;kg Sb-eq;2;oui;ef31;non;26
-ef_ressources_fos;Épuisement des ressources : fossiles (EF 3.1);Ress. fossiles;MJ;1;oui;ef31;non;27
+ef_cc_fossile;Changement climatique — fossile (EF 3.1);CC fossile;kg CO₂-eq;1;non;ef31;non;12
+ef_cc_luluc;Changement climatique — affectation des sols (EF 3.1);CC LULUC;kg CO₂-eq;3;oui;ef31;non;13
+ef_acidification;Acidification (EF 3.1);Acidification;mol H⁺-eq;2;oui;ef31;non;14
+ef_ozone_depletion;Appauvrissement de la couche d'ozone (EF 3.1);Couche d'ozone;kg CFC-11-eq;2;oui;ef31;non;15
+ef_tox_cancer;Toxicité humaine : cancer (EF 3.1);Tox. cancer;CTUh;2;oui;ef31;non;16
+ef_tox_non_cancer;Toxicité humaine : hors cancer (EF 3.1);Tox. hors cancer;CTUh;2;oui;ef31;non;17
+ef_particules;Particules fines (EF 3.1);Particules fines;disease inc.;2;oui;ef31;non;18
+ef_rayonnements;Rayonnements ionisants (EF 3.1);Rayonnements;kBq U-235-eq;1;oui;ef31;non;19
+ef_ozone_photo;Ozone photochimique (EF 3.1);Ozone photo.;kg NMVOC-eq;2;oui;ef31;non;20
+ef_eutro_terrestre;Eutrophisation terrestre (EF 3.1);Eutro. terrestre;mol N-eq;2;oui;ef31;non;21
+ef_eutro_eau_douce;Eutrophisation eau douce (EF 3.1);Eutro. eau douce;kg P-eq;2;oui;ef31;non;22
+ef_eutro_marine;Eutrophisation marine (EF 3.1);Eutro. marine;kg N-eq;2;oui;ef31;non;23
+ef_ecotox_eau_douce;Écotoxicité eau douce (EF 3.1);Écotoxicité;CTUe;1;oui;ef31;non;24
+ef_utilisation_sols;Utilisation des sols (EF 3.1);Sols;Pt;1;oui;ef31;non;25
+ef_utilisation_eau;Utilisation de l'eau (EF 3.1);Eau;m³ world-eq;1;oui;ef31;non;26
+ef_ressources_min;Épuisement des ressources : minéraux et métaux (EF 3.1);Minéraux/métaux;kg Sb-eq;2;oui;ef31;non;27
+ef_ressources_fos;Épuisement des ressources : fossiles (EF 3.1);Ress. fossiles;MJ;1;oui;ef31;non;28
