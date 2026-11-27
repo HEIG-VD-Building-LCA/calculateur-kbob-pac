@@ -18,7 +18,7 @@ export const TRANSLATIONS = {
       pageTitle: "Calculateur KBOB Pompe à chaleur",
       headerKicker: "Données des écobilans dans la construction (Technique du bâtiment) : Pour les planificateurs",
       headerTitle: "Calculateur KBOB Pompe à chaleur",
-      headerSubtitle: "Domaine d'utilisation : PAC de puissance jusqu'à 100 kW environ",
+      headerSubtitle: "Domaine d'utilisation : PAC de puissance jusqu'à 100 kW",
 
       panelInputsTitle: "Paramètres de la PAC",
       labelTech: "Technologie (source froide)",
