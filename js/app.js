@@ -1,8 +1,7 @@
 /**
  * js/app.js
- * Contrôleur page unique.
- * Base fixe : BAFU:2026v1 | Périmètre fixe : SIA 390/1 (Fabrication inclus fuites annuelles et élimination).
- * Tous les indicateurs (4 KBOB + 18 EF 3.1) sont calculés et affichés systématiquement.
+ * Contrôleur page unique multilingue (FR / DE / IT / EN).
+ * Base fixe : BAFU:2026v1 | Périmètre fixe : SIA 390/1 (Fabrication¹ et élimination).
  */
 import { loadAllData } from "./data_loader.js";
 import {
@@ -15,10 +14,25 @@ import {
   calculerEcobilan,
   formaterValeur,
 } from "./kbob_engine.js";
-import { exportCsv, exportExcelKbob2027, exportHtml } from "./exporters.js";
-
-const LABEL_FAB = "Fabrication (inclus fuites annuelles)";
-const LABEL_ELIM = "Élimination";
+import {
+  exportCsv,
+  exportExcelKbob2027,
+  exportHtml,
+  exportPdf,
+} from "./exporters.js";
+import {
+  detectInitialLang,
+  getPack,
+  isDefaultProjectName,
+  localizeFluidOption,
+  localizeFluidRef,
+  localizeIndicator,
+  localizeTech,
+  localizeUnite,
+  normalizeLang,
+  saveLang,
+  t,
+} from "./i18n.js";
 
 const PHASE_COLORS = {
   fabrication: "#007a53",
@@ -26,17 +40,21 @@ const PHASE_COLORS = {
 };
 
 let activeCharts = [];
+let copyResetTimer = null;
 
 const state = {
+  lang: detectInitialLang(),
   dataset: null,
   reglesMasse: [],
-  projetNom: "Projet PAC",
+  projetNom: "",
   technologie: "",
   puissanceKw: PUISSANCE_DEFAUT_KW,
   fluideOptionId: "",
   masseConnue: false,
   masseSaisieKg: "",
   uniteReference: UNITE_APPAREIL,
+  showKbob: true,
+  showEf31: false,
   lastResult: null,
 };
 
@@ -59,6 +77,82 @@ function showWarning(msg) {
   }
 }
 
+function splitIndicators(res) {
+  const localized = res.indicators.map((i) => localizeIndicator(i, state.lang));
+  const principaux = localized.filter((i) => i.groupe === "principal" || i.afficher_par_defaut);
+  const complementaires = localized.filter((i) => !principaux.includes(i));
+  return { principaux, complementaires };
+}
+
+function applyStaticTranslations() {
+  const lang = state.lang;
+  const pack = getPack(lang);
+
+  document.documentElement.lang = lang;
+  document.title = t(lang, "pageTitle");
+
+  // Boutons switch de langue
+  document.querySelectorAll(".lang-btn").forEach((btn) => {
+    const isActive = btn.dataset.lang === lang;
+    btn.classList.toggle("active", isActive);
+    btn.setAttribute("aria-pressed", String(isActive));
+  });
+
+  // Textes statiques
+  document.querySelectorAll("[data-i18n]").forEach((el) => {
+    const key = el.dataset.i18n;
+    el.textContent = t(lang, key);
+  });
+
+  document.querySelectorAll("[data-i18n-html]").forEach((el) => {
+    const key = el.dataset.i18nHtml;
+    el.innerHTML = t(lang, key);
+  });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((el) => {
+    const key = el.dataset.i18nPlaceholder;
+    el.placeholder = t(lang, key);
+  });
+
+  // Libellés courts des unités de référence
+  document.getElementById("unit-lbl-appareil").textContent = localizeUnite("appareil", lang, "short");
+  document.getElementById("unit-lbl-kw").textContent = localizeUnite("kw", lang, "short");
+  document.getElementById("unit-lbl-kg").textContent = localizeUnite("kg", lang, "short");
+
+  // Lien document méthodologie
+  const docLink = document.getElementById("doc-download-link");
+  if (docLink && pack.docHref) {
+    docLink.setAttribute("href", pack.docHref);
+  }
+
+  // Met à jour le nom par défaut du projet seulement si l'utilisateur ne l'a pas personnalisé
+  const inputProjet = document.getElementById("input-projet");
+  if (isDefaultProjectName(state.projetNom)) {
+    state.projetNom = t(lang, "defaultProjectName");
+    if (inputProjet) inputProjet.value = state.projetNom;
+  }
+
+  // Réinitialise le bouton copier si nécessaire
+  clearTimeout(copyResetTimer);
+  const copyBtn = document.getElementById("btn-copy-tables");
+  if (copyBtn) {
+    copyBtn.classList.remove("btn-copied");
+    copyBtn.textContent = t(lang, "copyTablesBtn");
+  }
+}
+
+function setLanguage(newLang) {
+  state.lang = normalizeLang(newLang);
+  saveLang(state.lang);
+  applyStaticTranslations();
+
+  if (state.dataset) {
+    renderTechSegmented();
+    syncFluidesDropdown();
+    recalculateAndRender();
+  }
+}
+
 function renderTechSegmented() {
   const ds = state.dataset;
   const container = document.getElementById("tech-segmented");
@@ -69,10 +163,11 @@ function renderTechSegmented() {
   container.innerHTML = ds.technologies
     .map((tech) => {
       const checked = tech === state.technologie ? "checked" : "";
+      const label = localizeTech(tech, state.lang);
       return `
         <label class="seg-option">
           <input type="radio" name="technologie" value="${escapeHtml(tech)}" ${checked} />
-          <span>${escapeHtml(tech)}</span>
+          <span>${escapeHtml(label)}</span>
         </label>`;
     })
     .join("");
@@ -89,7 +184,9 @@ function renderTechSegmented() {
 function syncFluidesDropdown() {
   const ds = state.dataset;
   const dispo = new Set(ds.fluidesParTech[state.technologie] || []);
-  const opts = ds.refrigerantOptions.filter((o) => dispo.has(o.fluide_reference));
+  const opts = ds.refrigerantOptions
+    .filter((o) => dispo.has(o.fluide_reference))
+    .map((o) => localizeFluidOption(o, state.lang));
 
   const fluSel = document.getElementById("select-fluide");
   fluSel.innerHTML = opts
@@ -102,41 +199,50 @@ function syncFluidesDropdown() {
   fluSel.value = state.fluideOptionId;
 }
 
+function getActiveFluidOptionLocalized() {
+  const ds = state.dataset;
+  const raw =
+    ds.refrigerantOptions.find((o) => o.id === state.fluideOptionId) ||
+    ds.refrigerantOptions[0];
+  return localizeFluidOption(raw, state.lang);
+}
+
 function renderInputSummaries(res) {
+  const lang = state.lang;
+  const optLoc = getActiveFluidOptionLocalized();
+  const fluidRefLoc = localizeFluidRef(res.fluideReference, lang);
+  const techLoc = localizeTech(res.technologie, lang);
+  const unitFullLoc = localizeUnite(res.uniteReference, lang, "full");
+
   document.getElementById("fluide-note").innerHTML =
-    `Donnée KBOB appliquée : <strong>${escapeHtml(res.fluideReference)}</strong> — ${escapeHtml(res.noteFluide)}`;
+    `${escapeHtml(t(lang, "fluidNotePrefix"))} <strong>${escapeHtml(fluidRefLoc)}</strong> — ${escapeHtml(optLoc.note_methodologique)}`;
 
   const m = res.massInfo;
-  const ratioStr =
-    Math.abs(m.ratioMasse - 1.0) > 1e-4
-      ? `<span class="ratio-highlight">${m.ratioMasse.toFixed(3)}</span>`
-      : "1.000";
+  const massSummaryEl = document.getElementById("mass-summary");
 
-  const statutTxt = m.masseConnue
-    ? "saisie manuelle"
-    : m.attenteSaisieMasse
-    ? "en attente de saisie"
-    : "modèle LCA-PAC";
-
-  document.getElementById("mass-summary").innerHTML = `
-    <div>Masse théorique m<sub>théo</sub>(${res.puissanceKw} kW) : <strong>${m.masseTheoriqueKg.toFixed(1)} kg</strong></div>
-    <div>Masse utilisée : <strong>${m.masseUtiliseeKg.toFixed(1)} kg</strong> (${statutTxt}) &middot; Ratio r<sub>m</sub> = ${ratioStr}</div>
-  `;
+  if (!state.masseConnue) {
+    massSummaryEl.style.display = "block";
+    massSummaryEl.innerHTML = `${escapeHtml(t(lang, "massUsedPrefix"))} <strong>${m.masseUtiliseeKg.toFixed(1)} kg</strong>`;
+  } else {
+    massSummaryEl.style.display = "none";
+    massSummaryEl.innerHTML = "";
+  }
 
   const massInput = document.getElementById("input-masse");
   if (massInput) {
-    massInput.placeholder = `Ex. ${Math.round(m.masseTheoriqueKg)}`;
+    massInput.placeholder = `${t(lang, "massExamplePrefix")} ${Math.round(m.masseTheoriqueKg)}`;
   }
 
   document.getElementById("results-subtitle").textContent =
-    `PAC ${res.technologie} · ${res.puissanceKw} kW · ${res.fluideReference} · ${m.masseUtiliseeKg.toFixed(1)} kg · ${res.uniteLabel}`;
-
-  document.getElementById("interp-badge").textContent = res.methodeInterpolation;
+    `${t(lang, "hpPrefix")} ${techLoc} · ${res.puissanceKw} kW · ${fluidRefLoc} · ${m.masseUtiliseeKg.toFixed(1)} kg · ${unitFullLoc}`;
 }
 
 function renderKpiCards(res) {
-  const principaux = res.indicators.filter((i) => i.afficher_par_defaut);
-  const list = principaux.length ? principaux : res.indicators.slice(0, 4);
+  const lang = state.lang;
+  const { principaux } = splitIndicators(res);
+  const list = principaux.length ? principaux : res.indicators.slice(0, 4).map((i) => localizeIndicator(i, lang));
+  const fabLabel = t(lang, "phaseFab");
+  const elimLabel = t(lang, "phaseElim");
 
   document.getElementById("kpi-cards").innerHTML = list
     .map((ind) => {
@@ -148,11 +254,11 @@ function renderKpiCards(res) {
           <div class="kpi-unit">${escapeHtml(ind.unite + res.suffixeUnite)}</div>
           <div class="kpi-split">
             <div class="kpi-split-row">
-              <span>${LABEL_FAB}</span>
+              <span>${escapeHtml(fabLabel)}</span>
               <strong>${formaterValeur(v.fabrication, ind)}</strong>
             </div>
             <div class="kpi-split-row">
-              <span>${LABEL_ELIM}</span>
+              <span>${escapeHtml(elimLabel)}</span>
               <strong>${formaterValeur(v.elimination, ind)}</strong>
             </div>
           </div>
@@ -169,14 +275,18 @@ function renderCharts(res) {
   }
   activeCharts = [];
 
+  const lang = state.lang;
   const container = document.getElementById("charts-grid");
   if (typeof window.Chart === "undefined") {
-    container.innerHTML = "<p class='field-note'>Graphiques indisponibles hors ligne (Chart.js non chargé).</p>";
+    container.innerHTML = `<p class="field-note">${escapeHtml(t(lang, "chartsOffline"))}</p>`;
     return;
   }
 
-  const principaux = res.indicators.filter((i) => i.afficher_par_defaut);
-  const list = principaux.length ? principaux : res.indicators.slice(0, 4);
+  const { principaux } = splitIndicators(res);
+  const list = principaux.length ? principaux : res.indicators.slice(0, 4).map((i) => localizeIndicator(i, lang));
+  const fabLabel = t(lang, "phaseFab");
+  const elimLabel = t(lang, "phaseElim");
+  const locale = getPack(lang).locale;
 
   container.innerHTML = list
     .map(
@@ -204,14 +314,14 @@ function renderCharts(res) {
         labels: [ind.nom_court],
         datasets: [
           {
-            label: LABEL_FAB,
+            label: fabLabel,
             data: [vals.fabrication || 0],
             backgroundColor: PHASE_COLORS.fabrication,
             borderRadius: 2,
             barThickness: 44,
           },
           {
-            label: LABEL_ELIM,
+            label: elimLabel,
             data: [vals.elimination || 0],
             backgroundColor: PHASE_COLORS.elimination,
             borderRadius: 2,
@@ -230,7 +340,7 @@ function renderCharts(res) {
               label: (context) => {
                 const v = context.parsed.y || 0;
                 const pct = total > 0 ? ((v / total) * 100).toFixed(1) : "0.0";
-                return `${context.dataset.label} : ${formaterValeur(v, ind)} ${ind.unite}${res.suffixeUnite} (${pct} %)`;
+                return `${context.dataset.label}: ${formaterValeur(v, ind)} ${ind.unite}${res.suffixeUnite} (${pct} %)`;
               },
             },
           },
@@ -249,7 +359,7 @@ function renderCharts(res) {
               font: { size: 10 },
               color: "#52606d",
               maxTicksLimit: 5,
-              callback: (value) => Number(value).toLocaleString("fr-CH"),
+              callback: (value) => Number(value).toLocaleString(locale),
             },
           },
         },
@@ -260,8 +370,18 @@ function renderCharts(res) {
 }
 
 function renderResultsTable(res) {
-  const principaux = res.indicators.filter((i) => i.groupe === "principal" || i.afficher_par_defaut);
-  const complementaires = res.indicators.filter((i) => !principaux.includes(i));
+  const lang = state.lang;
+  const { principaux, complementaires } = splitIndicators(res);
+  const copyBtn = document.getElementById("btn-copy-tables");
+  const wrap = document.getElementById("results-table-wrap");
+
+  if (!state.showKbob && !state.showEf31) {
+    copyBtn.disabled = true;
+    wrap.innerHTML = `<div class="empty-table-msg">${escapeHtml(t(lang, "emptyTableMsg"))}</div>`;
+    return;
+  }
+
+  copyBtn.disabled = false;
 
   const renderRows = (list) =>
     list
@@ -278,36 +398,134 @@ function renderResultsTable(res) {
       })
       .join("");
 
-  const efSection = complementaires.length
-    ? `
-      <tr class="group-row">
-        <td colspan="5">Indicateurs complémentaires — Méthode EF 3.1 (${complementaires.length} indicateurs)</td>
-      </tr>
-      ${renderRows(complementaires)}`
-    : "";
+  const showGroupHeaders = state.showKbob && state.showEf31;
+  let bodyHtml = "";
 
-  document.getElementById("results-table-wrap").innerHTML = `
+  if (state.showKbob) {
+    if (showGroupHeaders) {
+      bodyHtml += `<tr class="group-row"><td colspan="5">${escapeHtml(t(lang, "groupKbob"))}</td></tr>`;
+    }
+    bodyHtml += renderRows(principaux);
+  }
+
+  if (state.showEf31 && complementaires.length) {
+    if (showGroupHeaders) {
+      bodyHtml += `<tr class="group-row"><td colspan="5">${escapeHtml(
+        t(lang, "groupEf31", { count: complementaires.length })
+      )}</td></tr>`;
+    }
+    bodyHtml += renderRows(complementaires);
+  }
+
+  wrap.innerHTML = `
     <table class="kbob-table">
       <thead>
         <tr>
-          <th>Indicateur</th>
-          <th>Unité</th>
-          <th class="num">Total</th>
-          <th class="num">${LABEL_FAB}</th>
-          <th class="num">${LABEL_ELIM}</th>
+          <th>${escapeHtml(t(lang, "colIndicator"))}</th>
+          <th>${escapeHtml(t(lang, "colUnit"))}</th>
+          <th class="num">${escapeHtml(t(lang, "colTotal"))}</th>
+          <th class="num">${escapeHtml(t(lang, "phaseFab"))}</th>
+          <th class="num">${escapeHtml(t(lang, "phaseElim"))}</th>
         </tr>
       </thead>
-      <tbody>
-        <tr class="group-row">
-          <td colspan="5">Indicateurs principaux KBOB</td>
-        </tr>
-        ${renderRows(principaux)}
-        ${efSection}
-      </tbody>
+      <tbody>${bodyHtml}</tbody>
     </table>`;
 }
 
+function formatNumberForExcelPaste(val, ind) {
+  if (!Number.isFinite(val)) return "";
+  if (ind.notation_scientifique) {
+    return val.toExponential(3);
+  }
+  const dec = ind.decimales ?? 2;
+  return val.toFixed(dec);
+}
+
+async function copyActiveTablesToClipboard() {
+  const res = state.lastResult;
+  if (!res || (!state.showKbob && !state.showEf31)) return;
+
+  const lang = state.lang;
+  const { principaux, complementaires } = splitIndicators(res);
+  const lines = [];
+  const headerRow = [
+    t(lang, "colIndicator"),
+    t(lang, "colUnit"),
+    t(lang, "colTotal"),
+    t(lang, "phaseFab"),
+    t(lang, "phaseElim"),
+  ].join("\t");
+
+  const appendBlock = (title, list) => {
+    if (state.showKbob && state.showEf31) {
+      lines.push(title);
+    }
+    lines.push(headerRow);
+    for (const ind of list) {
+      const v = res.values[ind.id];
+      lines.push(
+        [
+          ind.nom,
+          `${ind.unite}${res.suffixeUnite}`,
+          formatNumberForExcelPaste(v.total, ind),
+          formatNumberForExcelPaste(v.fabrication, ind),
+          formatNumberForExcelPaste(v.elimination, ind),
+        ].join("\t")
+      );
+    }
+  };
+
+  if (state.showKbob) {
+    appendBlock(t(lang, "groupKbob"), principaux);
+  }
+  if (state.showEf31 && complementaires.length) {
+    if (lines.length) lines.push("");
+    appendBlock(t(lang, "checkEf31"), complementaires);
+  }
+  lines.push("");
+  lines.push(t(lang, "footnoteText"));
+
+  const tsv = lines.join("\r\n");
+
+  let copied = false;
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(tsv);
+      copied = true;
+    }
+  } catch {
+    copied = false;
+  }
+
+  if (!copied) {
+    const ta = document.createElement("textarea");
+    ta.value = tsv;
+    ta.style.position = "fixed";
+    ta.style.opacity = "0";
+    document.body.appendChild(ta);
+    ta.select();
+    try {
+      copied = document.execCommand("copy");
+    } catch {
+      copied = false;
+    }
+    document.body.removeChild(ta);
+  }
+
+  const btn = document.getElementById("btn-copy-tables");
+  if (copied && btn) {
+    clearTimeout(copyResetTimer);
+    btn.textContent = t(state.lang, "copiedBtn");
+    btn.classList.add("btn-copied");
+    copyResetTimer = setTimeout(() => {
+      btn.textContent = t(state.lang, "copyTablesBtn");
+      btn.classList.remove("btn-copied");
+    }, 2200);
+  }
+}
+
 function recalculateAndRender() {
+  const lang = state.lang;
   const warnings = [];
   let pVal = Number(state.puissanceKw);
   if (!Number.isFinite(pVal) || state.puissanceKw === "") {
@@ -318,11 +536,13 @@ function recalculateAndRender() {
     state.puissanceKw = pVal;
     document.getElementById("input-puissance").value = pVal;
     document.getElementById("range-puissance").value = pVal;
-    warnings.push(`La puissance nominale a été bornée dans la plage étalonnée [${PUISSANCE_MIN_KW} ; ${PUISSANCE_MAX_KW} kW].`);
+    warnings.push(
+      t(lang, "warnPowerClamped", { min: PUISSANCE_MIN_KW, max: PUISSANCE_MAX_KW })
+    );
   }
 
   if (state.masseConnue && state.masseSaisieKg !== "" && Number(state.masseSaisieKg) <= 0) {
-    warnings.push("La masse saisie doit être strictement positive : masse théorique utilisée par défaut.");
+    warnings.push(t(lang, "warnMassInvalid"));
   }
   showWarning(warnings.join(" "));
 
@@ -339,6 +559,9 @@ function recalculateAndRender() {
     uniteReference: state.uniteReference,
   });
 
+  // Attache l'ID de l'option fluide pour faciliter la traduction dans les exports
+  res.fluideOptionId = state.fluideOptionId;
+
   state.lastResult = res;
   renderInputSummaries(res);
   renderKpiCards(res);
@@ -353,6 +576,15 @@ function bindEvents() {
       logo.style.display = "none";
     });
   }
+
+  // Switch de langue
+  document.querySelectorAll(".lang-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      if (btn.dataset.lang && btn.dataset.lang !== state.lang) {
+        setLanguage(btn.dataset.lang);
+      }
+    });
+  });
 
   const inputP = document.getElementById("input-puissance");
   const rangeP = document.getElementById("range-puissance");
@@ -406,38 +638,63 @@ function bindEvents() {
     state.projetNom = e.target.value;
   });
 
-  document.getElementById("btn-export-xlsx").addEventListener("click", () => {
-    if (state.lastResult) exportExcelKbob2027(state.lastResult, state.projetNom);
+  document.getElementById("cb-show-kbob").addEventListener("change", (e) => {
+    state.showKbob = e.target.checked;
+    if (state.lastResult) renderResultsTable(state.lastResult);
   });
 
-  document.getElementById("btn-export-html").addEventListener("click", () => {
-    if (state.lastResult) exportHtml(state.lastResult, state.projetNom);
+  document.getElementById("cb-show-ef31").addEventListener("change", (e) => {
+    state.showEf31 = e.target.checked;
+    if (state.lastResult) renderResultsTable(state.lastResult);
+  });
+
+  document.getElementById("btn-copy-tables").addEventListener("click", copyActiveTablesToClipboard);
+
+  document.getElementById("btn-export-xlsx").addEventListener("click", () => {
+    if (state.lastResult) exportExcelKbob2027(state.lastResult, state.projetNom, state.lang);
   });
 
   document.getElementById("btn-export-csv").addEventListener("click", () => {
-    if (state.lastResult) exportCsv(state.lastResult, state.projetNom);
+    if (state.lastResult) exportCsv(state.lastResult, state.projetNom, state.lang);
   });
 
-  document.getElementById("btn-print").addEventListener("click", () => {
-    window.print();
+  document.getElementById("btn-export-html").addEventListener("click", () => {
+    if (state.lastResult) {
+      exportHtml(state.lastResult, state.projetNom, {
+        lang: state.lang,
+        showKbob: state.showKbob,
+        showEf31: state.showEf31,
+      });
+    }
+  });
+
+  document.getElementById("btn-export-pdf").addEventListener("click", () => {
+    if (state.lastResult) {
+      exportPdf(state.lastResult, state.projetNom, {
+        lang: state.lang,
+        showKbob: state.showKbob,
+        showEf31: state.showEf31,
+      });
+    }
   });
 }
 
 async function init() {
+  state.projetNom = t(state.lang, "defaultProjectName");
+  applyStaticTranslations();
+  bindEvents();
+
   try {
     const { dataset, reglesMasse } = await loadAllData();
     state.dataset = dataset;
     state.reglesMasse = reglesMasse;
 
-    document.getElementById("dataset-label-display").textContent = dataset.label;
-
     renderTechSegmented();
     syncFluidesDropdown();
-    bindEvents();
     recalculateAndRender();
   } catch (err) {
     console.error(err);
-    showWarning(`Erreur lors du chargement des données CSV : ${err.message}`);
+    showWarning(t(state.lang, "errLoadCsv", { msg: err.message }));
   }
 }
 

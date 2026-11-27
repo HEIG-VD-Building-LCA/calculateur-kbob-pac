@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Calculateur KBOB / KBOB Rechner — Pompes à chaleur</title>
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23dc2626'/><rect x='13' y='6' width='6' height='20' fill='white'/><rect x='6' y='13' width='20' height='6' fill='white'/></svg>" />
+  <title>Calculateur de Pompe à chaleur — KBOB</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23007a53'/><rect x='13' y='6' width='6' height='20' fill='white'/><rect x='6' y='13' width='20' height='6' fill='white'/></svg>" />
   <link rel="stylesheet" href="css/style.css" />
 
   <!-- Bibliothèques client-side CSP-safe -->
@@ -15,18 +15,24 @@
 </head>
 <body>
   <div class="page-wrapper">
-    <!-- Bannière KBOB d'origine -->
+    <!-- En-tête blanc encadré vert + filigrane REVIEW + switch FR/DE/IT/EN -->
     <header class="kbob-header">
-      <div class="kbob-header-left">
-        <div class="kbob-logo">
-          <img src="assets/logo_KBOB.png" alt="Logo KBOB" id="brand-logo" />
-        </div>
+      <div class="kbob-logo">
+        <img src="assets/logo_KBOB.png" alt="Logo KBOB" id="brand-logo" />
+        <span class="logo-watermark" aria-hidden="true">REVIEW</span>
+      </div>
+      <div class="kbob-header-right">
+        <nav class="lang-switcher" aria-label="Langue / Sprache / Lingua / Language">
+          <button type="button" class="lang-btn active" data-lang="fr" aria-pressed="true">FR</button>
+          <button type="button" class="lang-btn" data-lang="de" aria-pressed="false">DE</button>
+          <button type="button" class="lang-btn" data-lang="it" aria-pressed="false">IT</button>
+          <button type="button" class="lang-btn" data-lang="en" aria-pressed="false">EN</button>
+        </nav>
         <div class="kbob-header-title">
-          <h1>Calculateur KBOB / KBOB Rechner</h1>
-          <p>Écobilan paramétré des pompes à chaleur (puissance &amp; ratio de masse) — Liste KBOB 2027</p>
+          <h1 data-i18n="headerTitle">Calculateur de Pompe à chaleur</h1>
+          <p data-i18n="headerSubtitle">Technique du bâtiment · PAC (1–100 kW)</p>
         </div>
       </div>
-      <div class="kbob-badge">Technique du bâtiment · PAC (1–100 kW)</div>
     </header>
 
     <main>
@@ -38,24 +44,24 @@
              ===================================================== -->
         <aside class="panel panel-inputs" aria-label="Paramètres de la pompe à chaleur">
           <div class="panel-header">
-            <h2>Paramètres de la PAC</h2>
+            <h2 data-i18n="panelInputsTitle">Paramètres de la PAC</h2>
           </div>
 
           <div class="panel-body">
             <!-- Technologie -->
             <div class="field-group">
-              <span class="field-label">Technologie (source froide)</span>
-              <div id="tech-segmented" class="segmented-control" role="radiogroup" aria-label="Technologie"></div>
+              <span class="field-label" data-i18n="labelTech">Technologie (source froide)</span>
+              <div id="tech-segmented" class="segmented-control" role="radiogroup"></div>
             </div>
 
             <!-- Puissance nominale -->
             <div class="field-group">
               <div class="label-row">
-                <label class="field-label" for="input-puissance">Puissance nominale</label>
-                <span class="field-bounds">1 – 100 kW</span>
+                <label class="field-label" for="input-puissance" data-i18n="labelPower">Puissance nominale</label>
+                <span class="field-bounds" data-i18n="powerBounds">1 – 100 kW</span>
               </div>
               <div class="power-input-row">
-                <input type="range" id="range-puissance" min="1" max="100" step="0.5" value="10" aria-label="Curseur de puissance nominale" />
+                <input type="range" id="range-puissance" min="1" max="100" step="0.5" value="10" aria-label="Puissance nominale" />
                 <div class="number-unit-wrap">
                   <input type="number" id="input-puissance" min="1" max="100" step="0.5" value="10" />
                   <span class="input-unit">kW</span>
@@ -65,29 +71,29 @@
 
             <!-- Fluide frigorigène -->
             <div class="field-group">
-              <label class="field-label" for="select-fluide">Fluide frigorigène</label>
+              <label class="field-label" for="select-fluide" data-i18n="labelFluid">Fluide frigorigène</label>
               <select id="select-fluide"></select>
               <div id="fluide-note" class="field-note"></div>
             </div>
 
             <!-- Masse de la PAC -->
             <div class="field-group">
-              <span class="field-label">Masse de la pompe à chaleur</span>
-              <div class="segmented-control" role="radiogroup" aria-label="Mode de définition de la masse">
+              <span class="field-label" data-i18n="labelMass">Masse de la pompe à chaleur</span>
+              <div class="segmented-control" role="radiogroup">
                 <label class="seg-option">
                   <input type="radio" name="masse_statut" value="inconnue" checked />
-                  <span>Estimée (LCA-PAC)</span>
+                  <span data-i18n="massEstimated">Estimée (LCA-PAC)</span>
                 </label>
                 <label class="seg-option">
                   <input type="radio" name="masse_statut" value="connue" />
-                  <span>Connue (saisie)</span>
+                  <span data-i18n="massKnown">Connue (saisie)</span>
                 </label>
               </div>
 
               <div id="masse-saisie-wrap" class="mass-input-box" style="display: none;">
-                <label class="field-label-sm" for="input-masse">Masse réelle de l'appareil</label>
+                <label class="field-label-sm" for="input-masse" data-i18n="labelMassReal">Masse réelle de l'appareil</label>
                 <div class="number-unit-wrap">
-                  <input type="number" id="input-masse" min="1" step="1" placeholder="Ex. 230" />
+                  <input type="number" id="input-masse" min="1" step="1" placeholder="Ex. 256" />
                   <span class="input-unit">kg</span>
                 </div>
               </div>
@@ -97,46 +103,46 @@
 
             <!-- Unité de référence -->
             <div class="field-group">
-              <span class="field-label">Unité de référence</span>
-              <div class="segmented-control segmented-3" role="radiogroup" aria-label="Unité de référence">
+              <span class="field-label" data-i18n="labelUnit">Unité de référence</span>
+              <div class="segmented-control segmented-3" role="radiogroup">
                 <label class="seg-option">
                   <input type="radio" name="unite" value="appareil" checked />
-                  <span>Par appareil</span>
+                  <span id="unit-lbl-appareil">Par appareil</span>
                 </label>
                 <label class="seg-option">
                   <input type="radio" name="unite" value="kw" />
-                  <span>Par kW</span>
+                  <span id="unit-lbl-kw">Par kW</span>
                 </label>
                 <label class="seg-option">
                   <input type="radio" name="unite" value="kg" />
-                  <span>Par kg</span>
+                  <span id="unit-lbl-kg">Par kg</span>
                 </label>
               </div>
             </div>
 
             <!-- Nom du projet -->
             <div class="field-group">
-              <label class="field-label" for="input-projet">Désignation du projet (pour l'export)</label>
-              <input type="text" id="input-projet" value="Projet PAC" placeholder="Ex. Immeuble Rue du Lac" />
+              <label class="field-label" for="input-projet" data-i18n="labelProject">Désignation du projet (pour l'export)</label>
+              <input type="text" id="input-projet" value="Projet PAC" data-i18n-placeholder="projectPlaceholder" placeholder="Ex. Immeuble Rue du Lac" />
             </div>
 
             <!-- Périmètre fixe & lien unique vers le fichier Word -->
             <div class="scope-box">
-              <div class="scope-box-title">Périmètre et base de données</div>
+              <div class="scope-box-title" data-i18n="scopeBoxTitle">Périmètre et base de données</div>
               <dl class="scope-dl">
-                <dt>Périmètre de calcul (SIA 390/1)</dt>
-                <dd>Fabrication (inclus fuites annuelles — 2 %/an sur 20 ans) et élimination</dd>
-                <dt>Base d'écobilan</dt>
-                <dd id="dataset-label-display">KBOB 2027 — BAFU:2026v1 (IPCC 2021 / EF 3.1)</dd>
+                <dt data-i18n="scopeTerm">Périmètre de calcul (SIA 390/1)</dt>
+                <dd data-i18n="scopeDesc">Fabrication¹ et élimination</dd>
+                <dt data-i18n="dbTerm">Base d'écobilan</dt>
+                <dd id="dataset-label-display" data-i18n="dbLabel">KBOB 2027 — BAFU:2026v1 (IPCC 2021 / EF 3.1)</dd>
               </dl>
-              <a href="docs/methodologie_kbob_pac_2027.docx" download class="scope-doc-btn">
+              <a id="doc-download-link" href="docs/methodologie_kbob_pac_2027.docx" download class="scope-doc-btn">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                   <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
                   <polyline points="14 2 14 8 20 8"></polyline>
                   <line x1="16" y1="13" x2="8" y2="13"></line>
                   <line x1="16" y1="17" x2="8" y2="17"></line>
                 </svg>
-                <span>Télécharger la méthodologie (.docx)</span>
+                <span data-i18n="downloadDoc">Télécharger la méthodologie (.docx)</span>
               </a>
             </div>
           </div>
@@ -145,19 +151,11 @@
         <!-- =====================================================
              COLONNE DROITE : RÉSULTATS EN TEMPS RÉEL
              ===================================================== -->
-        <section class="results-column" aria-label="Résultats de l'écobilan">
+        <section class="results-column" aria-label="Résultats">
           <div class="panel">
-            <div class="panel-header panel-header-flex">
-              <div>
-                <h2>Résultats — Indicateurs KBOB</h2>
-                <p id="results-subtitle" class="panel-subtitle"></p>
-              </div>
-              <div class="export-bar">
-                <button type="button" id="btn-export-xlsx" class="btn btn-primary">Excel (.xlsx)</button>
-                <button type="button" id="btn-export-csv" class="btn btn-secondary">CSV</button>
-                <button type="button" id="btn-export-html" class="btn btn-secondary">Fiche HTML</button>
-                <button type="button" id="btn-print" class="btn btn-secondary">Imprimer / PDF</button>
-              </div>
+            <div class="panel-header">
+              <h2 data-i18n="resultsTitle">Résultats — Indicateurs KBOB</h2>
+              <p id="results-subtitle" class="panel-subtitle"></p>
             </div>
 
             <div class="panel-body">
@@ -165,15 +163,15 @@
 
               <div class="charts-block">
                 <div class="charts-header">
-                  <h3>Répartition par phase du cycle de vie</h3>
+                  <h3 data-i18n="chartsTitle">Répartition par phase du cycle de vie</h3>
                   <div class="charts-legend">
                     <span class="legend-item">
                       <span class="legend-swatch swatch-fab"></span>
-                      <span>Fabrication (inclus fuites annuelles)</span>
+                      <span data-i18n="phaseFab">Fabrication¹</span>
                     </span>
                     <span class="legend-item">
                       <span class="legend-swatch swatch-elim"></span>
-                      <span>Élimination</span>
+                      <span data-i18n="phaseElim">Élimination</span>
                     </span>
                   </div>
                 </div>
@@ -184,19 +182,51 @@
 
           <div class="panel">
             <div class="panel-header panel-header-flex">
-              <div>
-                <h2>Tableau complet des indicateurs</h2>
-                <p class="panel-subtitle">Indicateurs KBOB principaux et ensemble des 18 indicateurs complémentaires EF 3.1</p>
+              <div class="table-controls-left">
+                <h2 data-i18n="tablesTitle">Tableaux des indicateurs</h2>
+                <div class="table-checkboxes">
+                  <label class="table-check">
+                    <input type="checkbox" id="cb-show-kbob" checked />
+                    <span data-i18n="checkKbob">Indicateurs KBOB principaux</span>
+                  </label>
+                  <label class="table-check">
+                    <input type="checkbox" id="cb-show-ef31" />
+                    <span data-i18n="checkEf31">Indicateurs complémentaires EF 3.1</span>
+                  </label>
+                </div>
               </div>
-              <span id="interp-badge" class="meta-chip"></span>
+              <button type="button" id="btn-copy-tables" class="btn btn-secondary" data-i18n="copyTablesBtn">
+                Copier les tableaux actifs dans le presse-papiers
+              </button>
             </div>
             <div class="table-scroll" id="results-table-wrap"></div>
           </div>
         </section>
       </div>
+
+      <!-- Barre d'export en bas de page -->
+      <section class="panel export-footer-panel" aria-label="Export">
+        <div class="export-footer-inner">
+          <div class="export-footer-label">
+            <strong data-i18n="exportTitle">Exporter les résultats</strong>
+            <span data-i18n="exportSubtitle">Téléchargez la fiche complète au format souhaité (PDF identique à la fiche HTML).</span>
+          </div>
+          <div class="export-bar">
+            <button type="button" id="btn-export-xlsx" class="btn btn-primary" data-i18n="btnExcel">Excel (.xlsx)</button>
+            <button type="button" id="btn-export-csv" class="btn btn-secondary" data-i18n="btnCsv">CSV</button>
+            <button type="button" id="btn-export-html" class="btn btn-secondary" data-i18n="btnHtml">Fiche HTML</button>
+            <button type="button" id="btn-export-pdf" class="btn btn-secondary" data-i18n="btnPdf">PDF</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Annotation de bas de page -->
+      <p class="footnote-note" data-i18n-html="footnoteHtml">
+        <strong>¹ Fabrication :</strong> inclut les fuites annuelles de fluide frigorigène en phase d'utilisation (2 %/an sur 20 ans, conformément à la norme SIA 390/1).
+      </p>
     </main>
 
-    <footer class="kbob-footer">
+    <footer class="kbob-footer" data-i18n-html="footerHtml">
       Développé par la <strong>Haute École d'Ingénierie et de Gestion du canton de Vaud (HEIG-VD — Institut des Énergies)</strong>
       et financé par l'<strong>Office fédéral de l'énergie (OFEN)</strong>, dans le cadre du projet <strong>LCA-PAC</strong>.
     </footer>
